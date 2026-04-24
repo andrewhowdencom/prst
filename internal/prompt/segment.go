@@ -1,6 +1,11 @@
 package prompt
 
-import "strings"
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
 
 // SegmentConfig describes a single segment of a PS1 prompt.
 type SegmentConfig struct {
@@ -9,19 +14,85 @@ type SegmentConfig struct {
 	Text  string `mapstructure:"text"`
 }
 
-// bashEscapes maps segment types to Bash prompt escape sequences.
-// See bash(1) § PROMPTING for the full list.
-var bashEscapes = map[string]string{
-	"user":         `\u`,
-	"host":         `\h`,
-	"host_full":    `\H`,
-	"cwd":          `\w`,
-	"cwd_basename": `\W`,
-	"prompt_char":  `\$`,
-	"time_short":   `\A`,
-	"time_full":    `\t`,
-	"date":         `\d`,
-	"newline":      `\n`,
+// resolveSegment returns the runtime-resolved string for a segment type.
+func resolveSegment(segType string) string {
+	switch segType {
+	case "user":
+		return resolveUser()
+	case "host":
+		return resolveHostShort()
+	case "host_full":
+		return resolveHostFull()
+	case "cwd":
+		return resolveCWD()
+	case "cwd_basename":
+		return resolveCWDBasename()
+	case "prompt_char":
+		return resolvePromptChar()
+	case "time_short":
+		return time.Now().Format("15:04")
+	case "time_full":
+		return time.Now().Format("15:04:05")
+	case "date":
+		return time.Now().Format("Mon Jan 2")
+	case "newline":
+		return "\n"
+	default:
+		return ""
+	}
+}
+
+func resolveUser() string {
+	if u := os.Getenv("USER"); u != "" {
+		return u
+	}
+	return "?"
+}
+
+func resolveHostShort() string {
+	h, err := os.Hostname()
+	if err != nil {
+		return "?"
+	}
+	if i := strings.IndexByte(h, '.'); i >= 0 {
+		return h[:i]
+	}
+	return h
+}
+
+func resolveHostFull() string {
+	h, err := os.Hostname()
+	if err != nil {
+		return "?"
+	}
+	return h
+}
+
+func resolveCWD() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "?"
+	}
+	home := os.Getenv("HOME")
+	if home != "" && strings.HasPrefix(wd, home) {
+		return "~" + strings.TrimPrefix(wd, home)
+	}
+	return wd
+}
+
+func resolveCWDBasename() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "?"
+	}
+	return filepath.Base(wd)
+}
+
+func resolvePromptChar() string {
+	if os.Geteuid() == 0 {
+		return "#"
+	}
+	return "$"
 }
 
 // literalEscapes replaces backslashes with double-backslashes so that Bash

@@ -12,7 +12,9 @@ Add `prst` to your `.bashrc` so Bash evaluates it before every prompt:
 PS1='$(prst 1)'
 ```
 
-`prst` reads its configuration from `$XDG_CONFIG_HOME/prst/config.yaml` and prints a prompt string to stdout. By default, with no configuration, it emits the classic plain prompt:
+`prst` reads its configuration from `$XDG_CONFIG_HOME/prst/config.yaml` and prints a prompt string to stdout. All values (username, hostname, path, etc.) are resolved at runtime, and color codes are wrapped in Bash non-printing byte markers so cursor positioning stays correct.
+
+By default, with no configuration, it emits a plain classic prompt:
 
 ```
 user@host:/full/path$ 
@@ -50,27 +52,27 @@ ps1:
     - type: host         color: cyan
     - type: literal     text: ":"
     - type: cwd          color: blue
-    - type: literal     text: " $ "
+    - type: literal     text: " $"
     - type: prompt_char
 ```
 
-Each colored segment is automatically wrapped in Bash non-printing guards (`\[` `\]`), so Bash calculates cursor position correctly.
+Each colored segment is automatically wrapped in Bash non-printing byte markers, so Bash calculates cursor position correctly.
 
 #### Segment types
 
-| Type | Bash escape | Description |
-|---|---|---|
-| `user` | `\u` | Username |
-| `host` | `\h` | Short hostname |
-| `host_full` | `\H` | FQDN |
-| `cwd` | `\w` | Current working directory (`~` for `$HOME`) |
-| `cwd_basename` | `\W` | Basename of cwd |
-| `prompt_char` | `\$` | `#` for root, `$` otherwise |
-| `time_short` | `\A` | `HH:MM` |
-| `time_full` | `\t` | `HH:MM:SS` |
-| `date` | `\d` | `Weekday Month Day` |
-| `newline` | `\n` | Line break |
-| `literal` | raw text | Free-form text (backslashes are escaped automatically) |
+| Type | Description |
+|---|---|
+| `user` | Current username (`$USER`) |
+| `host` | Short hostname (first component) |
+| `host_full` | Full hostname (FQDN) |
+| `cwd` | Current working directory (`~` substituted for `$HOME`) |
+| `cwd_basename` | Basename of cwd |
+| `prompt_char` | `#` for root, `$` otherwise |
+| `time_short` | Current time as `HH:MM` |
+| `time_full` | Current time as `HH:MM:SS` |
+| `date` | Current date as `Weekday Month Day` |
+| `newline` | Line break |
+| `literal` | Free-form text (backslashes are escaped automatically) |
 
 #### Colors
 

@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -39,10 +40,11 @@ func NewPS1Generator(cfg PS1Config) *PS1Generator {
 }
 
 // Generate produces the PS1 string. If no segments are configured, it
-// returns the plain uncolored default prompt \u@\h:\w\$ .
+// returns the plain uncolored default prompt with runtime-resolved values.
 func (g *PS1Generator) Generate() string {
 	if len(g.config.Segments) == 0 {
-		return `\u@\h:\w\$ `
+		return fmt.Sprintf("%s@%s:%s %s ",
+			resolveUser(), resolveHostShort(), resolveCWD(), resolvePromptChar())
 	}
 
 	var b strings.Builder
@@ -55,17 +57,13 @@ func (g *PS1Generator) Generate() string {
 		color := Color(seg.Color)
 		ansi := color.toANSI()
 		if ansi != "" {
-			b.WriteString(`\[`)
-			b.WriteString(ansi)
-			b.WriteString(`\]`)
+			b.WriteString(wrapNonPrinting(ansi))
 		}
 
 		b.WriteString(content)
 
 		if ansi != "" {
-			b.WriteString(`\[`)
-			b.WriteString(resetSequence)
-			b.WriteString(`\]`)
+			b.WriteString(wrapNonPrinting(resetSequence))
 		}
 	}
 
@@ -77,11 +75,10 @@ func (g *PS1Generator) segmentContent(seg SegmentConfig) string {
 		return literalEscapes(seg.Text)
 	}
 
-	escape, ok := bashEscapes[seg.Type]
-	if !ok {
+	content := resolveSegment(seg.Type)
+	if content == "" {
 		slog.Warn("unknown segment type", "type", seg.Type)
-		return ""
 	}
 
-	return escape
+	return content
 }
