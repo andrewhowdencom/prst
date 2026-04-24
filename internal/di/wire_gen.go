@@ -9,14 +9,22 @@ package di
 import (
 	"github.com/andrewhowdencom/prst/internal/app"
 	"github.com/andrewhowdencom/prst/internal/commands"
+	"github.com/andrewhowdencom/prst/internal/configuration"
+	"github.com/andrewhowdencom/prst/internal/prompt"
 	"github.com/spf13/cobra"
 )
 
 // Injectors from wire.go:
 
 // NewApplication constructs the cobra.Command application graph.
-func NewApplication() *cobra.Command {
-	v := commands.NewCommands()
+func NewApplication() (*cobra.Command, error) {
+	viper, err := configuration.NewViper()
+	if err != nil {
+		return nil, err
+	}
+	ps1Config := prompt.NewPS1Config(viper)
+	ps1Generator := prompt.NewPS1Generator(ps1Config)
+	v := commands.NewCommands(ps1Generator)
 	command := app.NewRootCommand(v)
-	return command
+	return command, nil
 }

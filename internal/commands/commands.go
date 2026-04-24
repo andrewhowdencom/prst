@@ -2,6 +2,9 @@
 package commands
 
 import (
+	"fmt"
+
+	"github.com/andrewhowdencom/prst/internal/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -16,13 +19,14 @@ func NewCommand0() *cobra.Command {
 	}
 }
 
-// NewCommand1 returns the no-op prst 1 command (PS1).
-func NewCommand1() *cobra.Command {
+// NewCommand1 returns the prst 1 command that prints a PS1 string.
+func NewCommand1(g prompt.Generator) *cobra.Command {
 	return &cobra.Command{
 		Use:   "1",
 		Short: "Bash prompt string 1 (PS1)",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return nil
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			_, err := fmt.Fprintln(cmd.OutOrStdout(), g.Generate())
+			return err
 		},
 	}
 }
@@ -73,10 +77,10 @@ func NewVersionCommand() *cobra.Command {
 }
 
 // NewCommands returns all subcommands as a slice.
-func NewCommands() []*cobra.Command {
+func NewCommands(g prompt.Generator) []*cobra.Command {
 	return []*cobra.Command{
 		NewCommand0(),
-		NewCommand1(),
+		NewCommand1(g),
 		NewCommand2(),
 		NewCommand3(),
 		NewCommand4(),

@@ -10,7 +10,13 @@ import (
 )
 
 func main() {
-	if err := di.NewApplication().ExecuteContext(context.Background()); err != nil {
+	cmd, err := di.NewApplication()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := cmd.ExecuteContext(context.Background()); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
