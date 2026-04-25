@@ -48,6 +48,37 @@ func TestParsePromptNumbers(t *testing.T) {
 	}
 }
 
+func TestNewPromptCommand(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr bool
+	}{
+		{"valid 0", []string{"0"}, false},
+		{"valid 4", []string{"4"}, false},
+		{"no args", []string{}, true},
+		{"too many args", []string{"1", "2"}, true},
+		{"negative", []string{"-1"}, true},
+		{"too high", []string{"5"}, true},
+		{"non-numeric", []string{"abc"}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewPromptCommand(nil, nil)
+			buf := new(bytes.Buffer)
+			cmd.SetOut(buf)
+			cmd.SetErr(buf)
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Execute() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestNewInitCommand(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -92,6 +123,9 @@ func TestInitScriptBash(t *testing.T) {
 	if !strings.Contains(script, "PS1='$(prst_ps1)'") {
 		t.Errorf("bash init script missing PS1 assignment, got:\n%s", script)
 	}
+	if !strings.Contains(script, "prst prompt 1") {
+		t.Errorf("bash init script missing prst prompt call, got:\n%s", script)
+	}
 }
 
 func TestInitScriptZsh(t *testing.T) {
@@ -104,6 +138,9 @@ func TestInitScriptZsh(t *testing.T) {
 	}
 	if !strings.Contains(script, "PS1='$(prst_ps1)'") {
 		t.Errorf("zsh init script missing PS1 assignment, got:\n%s", script)
+	}
+	if !strings.Contains(script, "prst prompt 1") {
+		t.Errorf("zsh init script missing prst prompt call, got:\n%s", script)
 	}
 }
 
@@ -128,8 +165,7 @@ func TestInstallCommandDryRun(t *testing.T) {
 }
 
 func TestInstallCommandAppendAndRemove(t *testing.T) {
-	tmpDir := t.TempDir()
-	rcFile := filepath.Join(tmpDir, ".bashrc")
+	rcFile := filepath.Join(t.TempDir(), ".bashrc")
 
 	// Override the rc file path by monkey-patching via a custom shell type isn't
 	// easy, so we test the internal block helpers directly.

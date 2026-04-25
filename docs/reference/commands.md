@@ -4,25 +4,14 @@ This page describes every `prst` command, flag, and environment variable.
 
 ## Commands
 
-### `prst 0`
+### `prst prompt [0|1|2|3|4]`
 
-Print the PS0 prompt string (pre-command). Currently a no-op; reserved for future use.
+Print a prompt string for the given PS level. Only PS1 is currently implemented; PS0, PS2, PS3, and PS4 are reserved for future expansion and currently print nothing.
 
-### `prst 1`
-
-Print the PS1 prompt string (primary prompt). This is the command you typically use in your shell configuration.
-
-### `prst 2`
-
-Print the PS2 prompt string (continuation prompt). Currently a no-op; reserved for future use.
-
-### `prst 3`
-
-Print the PS3 prompt string (select prompt). Currently a no-op; reserved for future use.
-
-### `prst 4`
-
-Print the PS4 prompt string (debug prefix). Currently a no-op; reserved for future use.
+```bash
+$ prst prompt 1
+user@host:/current/path$
+```
 
 ### `prst init <shell> [0] [1] [2] [3] [4]`
 
@@ -33,7 +22,7 @@ Print shell-specific initialization code. Outputs a script that defines wrapper 
 $ prst init bash 1
 prst_ps1() {
     local raw
-    raw="$(prst 1)"
+    raw="$(prst prompt 1)"
     printf '\[%s\]' "$raw"
 }
 PS1='$(prst_ps1)'
@@ -42,7 +31,7 @@ PS1='$(prst_ps1)'
 $ prst init zsh 1
 prst_ps1() {
     local raw
-    raw="$(prst 1)"
+    raw="$(prst prompt 1)"
     printf '%{%s%}' "$raw"
 }
 setopt promptsubst

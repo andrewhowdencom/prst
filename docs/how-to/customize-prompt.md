@@ -50,7 +50,7 @@ color:
 Or for a single run:
 
 ```bash
-prst --no-color=false 1
+prst prompt --no-color=false 1
 ```
 
 ## How do I add a newline before the prompt?
@@ -113,5 +113,5 @@ ps1:
 Run `prst` with debug logging to see which segments are resolved and what color capability is detected:
 
 ```bash
-prst --log-level debug 1
+prst prompt --log-level debug 1
 ```

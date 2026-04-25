@@ -36,7 +36,7 @@ internal/
 
 ## Data Flow
 
-### `prst 1` — Prompt Generation
+### `prst prompt 1` — Prompt Generation
 
 1. **Entry** (`cmd/prst/main.go`)
    - Calls `di.NewApplication()` to build the Cobra command tree.
@@ -57,7 +57,7 @@ internal/
    - If the file is missing, Viper continues with defaults/env/flags only.
 
 4. **Command Dispatch** (`internal/commands`)
-   - `prst 1` invokes `NewCommand1`, which:
+   - `prst prompt 1` invokes the prompt command, which:
      - Reads the `--no-color` flag.
      - Calls `prompt.DefaultColorCapability(noColor, v)` to determine terminal color support.
      - Invokes `g.Generate(cap)` and writes the result to stdout.
