@@ -1,11 +1,7 @@
 package prompt
 
 import (
-	"os"
 	"strings"
-
-	"github.com/spf13/viper"
-	"golang.org/x/term"
 )
 
 // ColorCapability represents the color depth a terminal supports.
@@ -86,20 +82,4 @@ func detectFromEnvironment(colorTermEnv, termEnv string) ColorCapability {
 		return Color256
 	}
 	return ColorBasic16
-}
-
-// DefaultColorCapability reads the runtime environment and returns the
-// detected color capability for stdout.
-func DefaultColorCapability(colorFlag string, v *viper.Viper) ColorCapability {
-	colorEnabledSet := v.IsSet("color.enabled")
-	colorEnabled := v.GetBool("color.enabled")
-	return DetectColorCapability(
-		colorFlag,
-		colorEnabledSet,
-		colorEnabled,
-		os.Getenv("NO_COLOR"),
-		os.Getenv("TERM"),
-		os.Getenv("COLORTERM"),
-		term.IsTerminal(int(os.Stdout.Fd())),
-	)
 }
