@@ -10,11 +10,7 @@ Print the PS0 prompt string (pre-command). Currently a no-op; reserved for futur
 
 ### `prst 1`
 
-Print the PS1 prompt string (primary prompt). This is the command you typically use in your `.bashrc`.
-
-```bash
-PS1='$(prst 1)'
-```
+Print the PS1 prompt string (primary prompt). This is the command you typically use in your shell configuration.
 
 ### `prst 2`
 
@@ -27,6 +23,57 @@ Print the PS3 prompt string (select prompt). Currently a no-op; reserved for fut
 ### `prst 4`
 
 Print the PS4 prompt string (debug prefix). Currently a no-op; reserved for future use.
+
+### `prst init <shell> [0] [1] [2] [3] [4]`
+
+Print shell-specific initialization code. Outputs a script that defines wrapper functions and sets the requested PS variables for the target shell. Supported shells: `bash`, `zsh`.
+
+```bash
+# bash — wraps output in \[ \] non-printing markers
+$ prst init bash 1
+prst_ps1() {
+    local raw
+    raw="$(prst 1)"
+    printf '\[%s\]' "$raw"
+}
+PS1='$(prst_ps1)'
+
+# zsh — wraps output in %{ %} and enables promptsubst
+$ prst init zsh 1
+prst_ps1() {
+    local raw
+    raw="$(prst 1)"
+    printf '%{%s%}' "$raw"
+}
+setopt promptsubst
+PS1='$(prst_ps1)'
+```
+
+If no prompt numbers are given, it defaults to `1`.
+
+### `prst install [0] [1] [2] [3] [4]`
+
+Automatically installs `prst` into your shell configuration. Detects the current shell from `$SHELL`, appends `eval "$(prst init <shell> ...)"` to the appropriate rc file (e.g. `~/.bashrc`, `~/.zshrc`), and is idempotent — running it again replaces the previous block instead of duplicating it.
+
+```bash
+# Auto-detect shell and install PS1
+$ prst install 1
+
+# Explicitly target zsh, install PS1 and PS2
+$ prst install --shell zsh 1 2
+
+# Preview changes without writing
+$ prst install --dry-run 1
+
+# Remove prst from your shell configuration
+$ prst install --remove
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--shell` | `string` | auto-detect | Target shell (`bash` or `zsh`). |
+| `--dry-run` | `bool` | `false` | Print what would be written without modifying files. |
+| `--remove` | `bool` | `false` | Remove the prst initialization block from the rc file. |
 
 ### `prst version`
 

@@ -106,19 +106,6 @@ func (c Color) toANSI(cap ColorCapability) string {
 // resetSequence is the ANSI SGR reset code.
 const resetSequence = "\x1b[0m"
 
-// nonPrintStart is the raw SOH byte Bash uses to mark the start of a
-// non-printing sequence in PS1 (equivalent to \[).
-const nonPrintStart = "\x01"
-
-// nonPrintEnd is the raw STX byte Bash uses to mark the end of a non-printing
-// sequence in PS1 (equivalent to \]).
-const nonPrintEnd = "\x02"
-
-// wrapNonPrinting wraps s in Bash non-printing byte markers.
-func wrapNonPrinting(s string) string {
-	return nonPrintStart + s + nonPrintEnd
-}
-
 // hexToRGB parses a #RRGGBB hex string into decimal RGB values.
 func hexToRGB(hex string) ([3]int, error) {
 	hex = strings.TrimPrefix(hex, "#")

@@ -57,13 +57,13 @@ func (g *PS1Generator) Generate(cap ColorCapability) string {
 		color := NewColor(seg.Color)
 		ansi := color.toANSI(cap)
 		if ansi != "" {
-			b.WriteString(wrapNonPrinting(ansi))
+			b.WriteString(ansi)
 		}
 
 		b.WriteString(content)
 
 		if ansi != "" {
-			b.WriteString(wrapNonPrinting(resetSequence))
+			b.WriteString(resetSequence)
 		}
 	}
 

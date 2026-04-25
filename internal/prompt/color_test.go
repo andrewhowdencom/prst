@@ -122,14 +122,6 @@ func TestColorToANSI_Hex(t *testing.T) {
 	}
 }
 
-func TestWrapNonPrinting(t *testing.T) {
-	got := wrapNonPrinting("\x1b[32m")
-	want := "\x01\x1b[32m\x02"
-	if got != want {
-		t.Errorf("wrapNonPrinting() = %q, want %q", got, want)
-	}
-}
-
 func TestHexToRGB(t *testing.T) {
 	tests := []struct {
 		name    string

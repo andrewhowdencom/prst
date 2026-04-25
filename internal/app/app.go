@@ -12,7 +12,7 @@ import (
 func NewRootCommand(cmds []*cobra.Command) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "prst",
-		Short: "A tool for managing Bash prompt strings (PS0–PS4)",
+		Short: "A tool for managing shell prompt strings (PS0–PS4)",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			level, err := cmd.Flags().GetString("log-level")
 			if err != nil {

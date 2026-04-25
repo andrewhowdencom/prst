@@ -152,7 +152,7 @@ func TestPS1GeneratorSegments(t *testing.T) {
 			config: PS1Config{Segments: []SegmentConfig{{Type: "user", Color: "green"}}},
 			cap:    ColorBasic16,
 			wantFn: func() string {
-				return wrapNonPrinting(NewColor("green").toANSI(ColorBasic16)) + resolveUser() + wrapNonPrinting(resetSequence)
+				return NewColor("green").toANSI(ColorBasic16) + resolveUser() + resetSequence
 			},
 		},
 		{
@@ -176,12 +176,12 @@ func TestPS1GeneratorSegments(t *testing.T) {
 			},
 			cap: ColorBasic16,
 			wantFn: func() string {
-				return wrapNonPrinting(NewColor("green").toANSI(ColorBasic16)) + resolveUser() + wrapNonPrinting(resetSequence) +
-					"@" +
-					wrapNonPrinting(NewColor("cyan").toANSI(ColorBasic16)) + resolveHostShort() + wrapNonPrinting(resetSequence) +
-					":" +
-					wrapNonPrinting(NewColor("blue").toANSI(ColorBasic16)) + resolveCWD() + wrapNonPrinting(resetSequence) +
-					" " + resolvePromptChar()
+			return NewColor("green").toANSI(ColorBasic16) + resolveUser() + resetSequence +
+				"@" +
+				NewColor("cyan").toANSI(ColorBasic16) + resolveHostShort() + resetSequence +
+				":" +
+				NewColor("blue").toANSI(ColorBasic16) + resolveCWD() + resetSequence +
+				" " + resolvePromptChar()
 			},
 		},
 		{
@@ -191,7 +191,7 @@ func TestPS1GeneratorSegments(t *testing.T) {
 			},
 			cap: Color256,
 			wantFn: func() string {
-				return wrapNonPrinting(NewColor("256:82").toANSI(Color256)) + resolveUser() + wrapNonPrinting(resetSequence)
+				return NewColor("256:82").toANSI(Color256) + resolveUser() + resetSequence
 			},
 		},
 		{
@@ -209,7 +209,7 @@ func TestPS1GeneratorSegments(t *testing.T) {
 			},
 			cap: ColorTrueColor,
 			wantFn: func() string {
-				return wrapNonPrinting(NewColor("rgb:255,128,0").toANSI(ColorTrueColor)) + resolveUser() + wrapNonPrinting(resetSequence)
+				return NewColor("rgb:255,128,0").toANSI(ColorTrueColor) + resolveUser() + resetSequence
 			},
 		},
 		{
@@ -219,7 +219,7 @@ func TestPS1GeneratorSegments(t *testing.T) {
 			},
 			cap: ColorTrueColor,
 			wantFn: func() string {
-				return wrapNonPrinting(NewColor("#ff8000").toANSI(ColorTrueColor)) + resolveUser() + wrapNonPrinting(resetSequence)
+				return NewColor("#ff8000").toANSI(ColorTrueColor) + resolveUser() + resetSequence
 			},
 		},
 		{

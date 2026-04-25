@@ -7,10 +7,14 @@ See [Bash/Prompt customization](https://wiki.archlinux.org/title/Bash/Prompt_cus
 ## Quick Start
 
 ```bash
-PS1='$(prst 1)'
+# Automatic installation into your shell
+prst install 1
+
+# Or manual installation in ~/.bashrc or ~/.zshrc
+eval "$(prst init bash 1)"
 ```
 
-`prst` reads its configuration from `$XDG_CONFIG_HOME/prst/config.yaml` and prints a prompt string to stdout. All values (username, hostname, path, etc.) are resolved at runtime, and color codes are wrapped in Bash non-printing byte markers so cursor positioning stays correct.
+`prst` reads its configuration from `$XDG_CONFIG_HOME/prst/config.yaml` and prints a prompt string to stdout. All values (username, hostname, path, etc.) are resolved at runtime, and color codes are handled by shell-specific init scripts so cursor positioning stays correct.
 
 By default, with no configuration, it emits a plain classic prompt:
 

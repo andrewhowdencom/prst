@@ -4,7 +4,7 @@ This page explains the "why" behind `prst`'s key design choices.
 
 ## Why PS0–PS4?
 
-Bash defines five prompt strings:
+POSIX-compatible shells define five prompt variables:
 
 | Variable | When displayed |
 |---|---|
@@ -14,17 +14,17 @@ Bash defines five prompt strings:
 | `PS3` | The prompt for the `select` built-in. |
 | `PS4` | The prefix for execution trace output (`set -x`). |
 
-Most prompt tools only handle `PS1`. `prst` names its commands after the Bash variable numbers (`0`–`4`) so the mapping is obvious and future-proof. Even though PS0, PS2, PS3, and PS4 are currently no-ops in `prst`, the command surface is reserved for future expansion without breaking changes.
+Most prompt tools only handle `PS1`. `prst` names its commands after the shell variable numbers (`0`–`4`) so the mapping is obvious and future-proof. Even though PS0, PS2, PS3, and PS4 are currently no-ops in `prst`, the command surface is reserved for future expansion without breaking changes.
 
 ## Why runtime resolution instead of template expansion?
 
-Many prompt tools generate a static string once and embed shell escape sequences (like `\u` for user or `\w` for cwd) directly into `PS1`. This is fast but inflexible: the prompt cannot easily react to runtime conditions beyond what Bash provides natively.
+Many prompt tools generate a static string once and embed shell escape sequences (like `\u` for user or `\w` for cwd in Bash) directly into `PS1`. This is fast but inflexible: the prompt cannot easily react to runtime conditions beyond what the shell provides natively.
 
 `prst` resolves every value at runtime on each invocation. This has several benefits:
 
 - **Accurate cwd**: the path updates correctly even when `$PWD` is manipulated by external tools.
-- **Accurate time**: `time_short` and `time_full` show the exact moment the prompt is rendered, not when `.bashrc` was sourced.
-- **Portability**: the same YAML config works on any system without relying on Bash-specific prompt escape sequences.
+- **Accurate time**: `time_short` and `time_full` show the exact moment the prompt is rendered, not when the rc file was sourced.
+- **Portability**: the same YAML config works on any system without relying on shell-specific prompt escape sequences.
 
 The trade-off is a small per-prompt fork/exec overhead. For interactive shells, this is negligible (well under a millisecond on modern hardware).
 
@@ -55,8 +55,14 @@ Terminal color support varies widely: some terminals support only 16 colors, oth
 
 The detection chain explicitly honors user overrides first (`--no-color`, `color.enabled: false`, `$NO_COLOR`) before inspecting `$TERM`, `$COLORTERM`, and TTY state. This follows the [NO_COLOR convention](https://no-color.org/) and respects accessibility preferences while still taking advantage of rich color support when available.
 
-## Why Bash non-printing byte markers?
+## Why shell-specific init scripts?
 
-ANSI escape sequences are invisible characters, but Bash counts them when calculating line length for cursor positioning. If color codes are not marked as non-printing, long command lines wrap incorrectly and editing becomes broken.
+ANSI escape sequences are invisible characters, but every shell counts them differently when calculating line length for cursor positioning. If color codes are not marked as non-printing with the correct shell-specific syntax, long command lines wrap incorrectly and editing becomes broken.
 
-`prst` automatically wraps every ANSI escape sequence in `\x01` (SOH) and `\x02` (STX) — the byte equivalents of `\[` and `\]`. This is handled transparently so users never need to think about it.
+Rather than hard-coding Bash-specific `\x01` / `\x02` markers into the prompt output (which would break zsh and any future shell), `prst` separates concerns:
+
+1. `prst N` emits raw ANSI codes.
+2. `prst init <shell>` generates a wrapper that applies the correct non-printing markers for the target shell (`\[` `\]` for Bash, `%{...%}` for zsh).
+3. `prst install` appends that init script to the correct rc file.
+
+This keeps `prst` universal: the same core generator works for any shell, and only the thin init layer changes.

@@ -13,7 +13,7 @@ import (
 func NewCommand0() *cobra.Command {
 	return &cobra.Command{
 		Use:   "0",
-		Short: "Bash prompt string 0 (PS0)",
+		Short: "Shell prompt string 0 (PS0)",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return nil
 		},
@@ -24,7 +24,7 @@ func NewCommand0() *cobra.Command {
 func NewCommand1(v *viper.Viper, g prompt.Generator) *cobra.Command {
 	return &cobra.Command{
 		Use:   "1",
-		Short: "Bash prompt string 1 (PS1)",
+		Short: "Shell prompt string 1 (PS1)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			noColor, _ := cmd.Flags().GetBool("no-color")
 			cap := prompt.DefaultColorCapability(noColor, v)
@@ -38,7 +38,7 @@ func NewCommand1(v *viper.Viper, g prompt.Generator) *cobra.Command {
 func NewCommand2() *cobra.Command {
 	return &cobra.Command{
 		Use:   "2",
-		Short: "Bash prompt string 2 (PS2)",
+		Short: "Shell prompt string 2 (PS2)",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return nil
 		},
@@ -49,7 +49,7 @@ func NewCommand2() *cobra.Command {
 func NewCommand3() *cobra.Command {
 	return &cobra.Command{
 		Use:   "3",
-		Short: "Bash prompt string 3 (PS3)",
+		Short: "Shell prompt string 3 (PS3)",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return nil
 		},
@@ -60,7 +60,7 @@ func NewCommand3() *cobra.Command {
 func NewCommand4() *cobra.Command {
 	return &cobra.Command{
 		Use:   "4",
-		Short: "Bash prompt string 4 (PS4)",
+		Short: "Shell prompt string 4 (PS4)",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return nil
 		},
@@ -87,6 +87,8 @@ func NewCommands(v *viper.Viper, g prompt.Generator) []*cobra.Command {
 		NewCommand2(),
 		NewCommand3(),
 		NewCommand4(),
+		NewInitCommand(),
+		NewInstallCommand(),
 		NewVersionCommand(),
 	}
 }

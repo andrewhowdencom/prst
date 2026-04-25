@@ -1,6 +1,6 @@
 # Architecture
 
-`prst` is a single-purpose CLI tool that generates Bash prompt strings (PS0–PS4) from a declarative YAML configuration. This document describes the core technologies, package layout, data flow, and key design decisions.
+`prst` is a single-purpose CLI tool that generates shell prompt strings (PS0–PS4) from a declarative YAML configuration. This document describes the core technologies, package layout, data flow, and key design decisions.
 
 ## Core Technologies
 
@@ -19,7 +19,7 @@
 cmd/prst/main.go              # Minimal entry point: delegates to DI graph.
 internal/
   app/app.go                  # Cobra root command + global flags (--log-level, --no-color).
-  commands/commands.go        # Subcommands: 0, 1, 2, 3, 4, version.
+  commands/commands.go        # Subcommands: 0, 1, 2, 3, 4, init, install, version.
   configuration/
     configuration.go          # Viper setup: env prefix PRST_, XDG config path, YAML read.
   di/
@@ -30,11 +30,13 @@ internal/
     color.go                  # Color parsing: named, 256, rgb, hex → ANSI SGR codes.
     generator.go              # PS1Generator: assembles segments into the final prompt string.
     segment.go                # Segment resolution: runtime values (user, host, cwd, time, …).
+  shell/
+    shell.go                  # Shell detection, rc file resolution, init script generation.
 ```
 
 ## Data Flow
 
-A single invocation of `prst 1` follows this path:
+### `prst 1` — Prompt Generation
 
 1. **Entry** (`cmd/prst/main.go`)
    - Calls `di.NewApplication()` to build the Cobra command tree.
@@ -65,8 +67,29 @@ A single invocation of `prst 1` follows this path:
    - For each segment:
      - `segmentContent()` resolves runtime values (e.g., `os.Getenv("USER")`, `os.Getwd()`, `time.Now()`).
      - `Color.toANSI(cap)` converts the segment's color specification into an ANSI escape sequence.
-     - ANSI codes are wrapped in Bash non-printing byte markers (`\x01` / `\x02`, equivalent to `\[` / `\]`) so Bash calculates cursor position correctly.
+     - ANSI codes are emitted raw (no shell-specific wrapping).
    - If no segments are configured, the generator falls back to a plain default prompt.
+
+### `prst init bash 1` — Init Script Generation
+
+1. **Shell Detection** (`internal/shell`)
+   - `shell.ParseShell` validates the requested shell.
+
+2. **Script Generation** (`internal/shell`)
+   - `Shell.InitScript(numbers)` generates:
+     - Wrapper functions (`prst_ps1`, etc.) that invoke `prst N` and wrap the output in shell-specific non-printing markers (`\[` `\]` for Bash, `%{...%}` for zsh).
+     - `PSN='$(prst_psN)'` assignments.
+
+### `prst install 1` — Shell Configuration Installation
+
+1. **Shell Detection** (`internal/shell`)
+   - Checks `$SHELL` or falls back to Bash.
+
+2. **RC File Resolution** (`internal/shell`)
+   - Returns `~/.bashrc` for Bash, `~/.zshrc` for zsh.
+
+3. **Block Management** (`internal/commands`)
+   - Reads the rc file, strips any existing `prst` block (idempotency), and appends a new block containing `eval "$(prst init <shell> ...)"`.
 
 ## Key Design Decisions
 
@@ -93,3 +116,13 @@ Google Wire generates the object graph at build time rather than using reflectio
 ### Color Capability Detection
 
 `prst` auto-detects the richest color format the terminal can safely display. The detection chain (see `internal/prompt/capability.go`) honors explicit user overrides first (`--no-color`, `color.enabled: false`, `$NO_COLOR`) before inspecting `$TERM`, `$COLORTERM`, and TTY state. This follows the [NO_COLOR convention](https://no-color.org/) while still supporting truecolor for modern terminals.
+
+### Shell-Specific Init Scripts
+
+Instead of hard-coding Bash-specific non-printing byte markers into the prompt generator, `prst` separates concerns:
+
+- The **generator** emits raw ANSI codes.
+- The **init script** (`prst init`) applies the correct shell-specific wrapping.
+- The **install command** (`prst install`) places that init script in the right rc file.
+
+This design keeps `prst` universal: adding support for a new shell only requires a new init script template, with no changes to the core generator.
