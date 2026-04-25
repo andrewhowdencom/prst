@@ -6,6 +6,7 @@ import (
 
 	"github.com/andrewhowdencom/prst/internal/prompt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // NewCommand0 returns the no-op prst 0 command (PS0).
@@ -20,12 +21,14 @@ func NewCommand0() *cobra.Command {
 }
 
 // NewCommand1 returns the prst 1 command that prints a PS1 string.
-func NewCommand1(g prompt.Generator) *cobra.Command {
+func NewCommand1(v *viper.Viper, g prompt.Generator) *cobra.Command {
 	return &cobra.Command{
 		Use:   "1",
 		Short: "Bash prompt string 1 (PS1)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			_, err := fmt.Fprintln(cmd.OutOrStdout(), g.Generate())
+			noColor, _ := cmd.Flags().GetBool("no-color")
+			cap := prompt.DefaultColorCapability(noColor, v)
+			_, err := fmt.Fprintln(cmd.OutOrStdout(), g.Generate(cap))
 			return err
 		},
 	}
@@ -77,10 +80,10 @@ func NewVersionCommand() *cobra.Command {
 }
 
 // NewCommands returns all subcommands as a slice.
-func NewCommands(g prompt.Generator) []*cobra.Command {
+func NewCommands(v *viper.Viper, g prompt.Generator) []*cobra.Command {
 	return []*cobra.Command{
 		NewCommand0(),
-		NewCommand1(g),
+		NewCommand1(v, g),
 		NewCommand2(),
 		NewCommand3(),
 		NewCommand4(),

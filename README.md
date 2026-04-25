@@ -30,13 +30,14 @@ prst 3   # Print PS3 string (select prompt)
 prst 4   # Print PS4 string (debug prefix)
 prst version          # Show version
 prst --log-level debug 1   # Adjust log level for a single run
+prst --no-color 1        # Disable colors for a single run
 ```
 
 ### Configuration
 
 Configuration is read from (in order of precedence):
 
-1. Command-line flags (`--log-level`)
+1. Command-line flags (`--log-level`, `--no-color`)
 2. Environment variables (`PRST_LOG_LEVEL`)
 3. Config file at `$XDG_CONFIG_HOME/prst/config.yaml`
 
@@ -52,7 +53,7 @@ ps1:
     - type: host         color: cyan
     - type: literal     text: ":"
     - type: cwd          color: blue
-    - type: literal     text: " $"
+    - type: literal     text: " "
     - type: prompt_char
 ```
 
@@ -76,7 +77,34 @@ Each colored segment is automatically wrapped in Bash non-printing byte markers,
 
 #### Colors
 
-Named colors from the 16-color ANSI palette: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, and `bright_*` variants (e.g. `bright_blue`). Unknown colors are ignored (segment renders uncolored).
+`prst` auto-detects your terminal's color capability and emits the richest format it can safely use.
+
+**Detection order** (first match wins):
+1. `--no-color` flag or `color.enabled: false` → no colors
+2. `$NO_COLOR` environment variable set → no colors
+3. `$TERM == dumb` → no colors
+4. Non-TTY and not explicitly enabled → no colors
+5. `$COLORTERM == truecolor` or `24bit` → 24-bit RGB
+6. `$TERM` contains `256color` → 256-color palette
+7. Default → 16 standard ANSI colors
+
+You can override auto-detection in your config:
+
+```yaml
+color:
+  enabled: true   # Force colors even when piped
+```
+
+**Color formats** (segment `color` field):
+
+| Format | Example | Terminal needed |
+|---|---|---|
+| Named basic | `green`, `bright_blue` | Any terminal |
+| 256-color | `256:82` | 256-color or better |
+| RGB decimal | `rgb:255,128,0` | True-color |
+| RGB hex | `#ff8000` | True-color |
+
+If a richer color format is requested but the terminal doesn't support it, the segment renders uncolored (the text still appears).
 
 ## Development
 

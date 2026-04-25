@@ -32,6 +32,7 @@ func NewRootCommand(cmds []*cobra.Command) *cobra.Command {
 	}
 
 	root.PersistentFlags().String("log-level", "info", "Set the logging level (debug, info, warn, error)")
+	root.PersistentFlags().Bool("no-color", false, "Disable colored output")
 	root.AddCommand(cmds...)
 
 	return root

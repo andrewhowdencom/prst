@@ -24,7 +24,7 @@ func NewApplication() (*cobra.Command, error) {
 	}
 	ps1Config := prompt.NewPS1Config(viper)
 	ps1Generator := prompt.NewPS1Generator(ps1Config)
-	v := commands.NewCommands(ps1Generator)
+	v := commands.NewCommands(viper, ps1Generator)
 	command := app.NewRootCommand(v)
 	return command, nil
 }

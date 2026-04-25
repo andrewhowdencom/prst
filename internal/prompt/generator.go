@@ -10,7 +10,7 @@ import (
 
 // Generator produces a PS1 prompt string.
 type Generator interface {
-	Generate() string
+	Generate(cap ColorCapability) string
 }
 
 // PS1Config holds the user-defined configuration for a PS1 prompt.
@@ -41,7 +41,7 @@ func NewPS1Generator(cfg PS1Config) *PS1Generator {
 
 // Generate produces the PS1 string. If no segments are configured, it
 // returns the plain uncolored default prompt with runtime-resolved values.
-func (g *PS1Generator) Generate() string {
+func (g *PS1Generator) Generate(cap ColorCapability) string {
 	if len(g.config.Segments) == 0 {
 		return fmt.Sprintf("%s@%s:%s %s ",
 			resolveUser(), resolveHostShort(), resolveCWD(), resolvePromptChar())
@@ -54,8 +54,8 @@ func (g *PS1Generator) Generate() string {
 			continue
 		}
 
-		color := Color(seg.Color)
-		ansi := color.toANSI()
+		color := NewColor(seg.Color)
+		ansi := color.toANSI(cap)
 		if ansi != "" {
 			b.WriteString(wrapNonPrinting(ansi))
 		}

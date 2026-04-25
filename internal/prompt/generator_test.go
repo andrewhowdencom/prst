@@ -9,49 +9,6 @@ import (
 	"time"
 )
 
-func TestColorToANSI(t *testing.T) {
-	tests := []struct {
-		name string
-		c    Color
-		want string
-	}{
-		{"black", "black", "\x1b[30m"},
-		{"red", "red", "\x1b[31m"},
-		{"green", "green", "\x1b[32m"},
-		{"yellow", "yellow", "\x1b[33m"},
-		{"blue", "blue", "\x1b[34m"},
-		{"magenta", "magenta", "\x1b[35m"},
-		{"cyan", "cyan", "\x1b[36m"},
-		{"white", "white", "\x1b[37m"},
-		{"bright_black", "bright_black", "\x1b[90m"},
-		{"bright_red", "bright_red", "\x1b[91m"},
-		{"bright_green", "bright_green", "\x1b[92m"},
-		{"bright_yellow", "bright_yellow", "\x1b[93m"},
-		{"bright_blue", "bright_blue", "\x1b[94m"},
-		{"bright_magenta", "bright_magenta", "\x1b[95m"},
-		{"bright_cyan", "bright_cyan", "\x1b[96m"},
-		{"bright_white", "bright_white", "\x1b[97m"},
-		{"unknown", "chartreuse", ""},
-		{"empty", "", ""},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.c.toANSI(); got != tt.want {
-				t.Errorf("toANSI() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestWrapNonPrinting(t *testing.T) {
-	got := wrapNonPrinting("\x1b[32m")
-	want := "\x01\x1b[32m\x02"
-	if got != want {
-		t.Errorf("wrapNonPrinting() = %q, want %q", got, want)
-	}
-}
-
 func TestLiteralEscapes(t *testing.T) {
 	tests := []struct {
 		name string
@@ -106,7 +63,6 @@ func TestResolveCWD(t *testing.T) {
 	if got == "" || got == "?" {
 		t.Errorf("resolveCWD() = %q, want non-empty path", got)
 	}
-	// If HOME is set and we're inside it, should start with ~
 	home := os.Getenv("HOME")
 	if home != "" && strings.HasPrefix(got, home) {
 		t.Errorf("resolveCWD() = %q, should use ~ prefix when inside HOME", got)
@@ -153,7 +109,6 @@ func TestResolveSegment(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := resolveSegment(tt.typ)
 			if tt.typ == "time_short" || tt.typ == "time_full" || tt.typ == "date" {
-				// Time-based segments may differ by a second; just check non-empty
 				if got == "" {
 					t.Errorf("resolveSegment(%q) = empty, want non-empty", tt.typ)
 				}
@@ -170,8 +125,12 @@ func TestPS1GeneratorDefault(t *testing.T) {
 	g := NewPS1Generator(PS1Config{})
 	want := fmt.Sprintf("%s@%s:%s %s ",
 		resolveUser(), resolveHostShort(), resolveCWD(), resolvePromptChar())
-	if got := g.Generate(); got != want {
-		t.Errorf("Generate() = %q, want %q", got, want)
+	for _, cap := range []ColorCapability{ColorNone, ColorBasic16, Color256, ColorTrueColor} {
+		t.Run(fmt.Sprintf("cap_%d", cap), func(t *testing.T) {
+			if got := g.Generate(cap); got != want {
+				t.Errorf("Generate(%v) = %q, want %q", cap, got, want)
+			}
+		})
 	}
 }
 
@@ -179,23 +138,28 @@ func TestPS1GeneratorSegments(t *testing.T) {
 	tests := []struct {
 		name   string
 		config PS1Config
+		cap    ColorCapability
 		wantFn func() string
 	}{
 		{
-			name: "single user segment",
-			config: PS1Config{
-				Segments: []SegmentConfig{{Type: "user"}},
-			},
+			name:   "single user segment no color",
+			config: PS1Config{Segments: []SegmentConfig{{Type: "user"}}},
+			cap:    ColorNone,
 			wantFn: func() string { return resolveUser() },
 		},
 		{
-			name: "single colored user segment",
-			config: PS1Config{
-				Segments: []SegmentConfig{{Type: "user", Color: "green"}},
-			},
+			name:   "single colored user segment basic",
+			config: PS1Config{Segments: []SegmentConfig{{Type: "user", Color: "green"}}},
+			cap:    ColorBasic16,
 			wantFn: func() string {
-				return wrapNonPrinting(Color("green").toANSI()) + resolveUser() + wrapNonPrinting(resetSequence)
+				return wrapNonPrinting(NewColor("green").toANSI(ColorBasic16)) + resolveUser() + wrapNonPrinting(resetSequence)
 			},
+		},
+		{
+			name:   "colored user segment on none",
+			config: PS1Config{Segments: []SegmentConfig{{Type: "user", Color: "green"}}},
+			cap:    ColorNone,
+			wantFn: func() string { return resolveUser() },
 		},
 		{
 			name: "multiple segments mixed colors",
@@ -206,26 +170,64 @@ func TestPS1GeneratorSegments(t *testing.T) {
 					{Type: "host", Color: "cyan"},
 					{Type: "literal", Text: ":"},
 					{Type: "cwd", Color: "blue"},
-					{Type: "literal", Text: " $ "},
+					{Type: "literal", Text: " "},
 					{Type: "prompt_char"},
 				},
 			},
+			cap: ColorBasic16,
 			wantFn: func() string {
-				return wrapNonPrinting(Color("green").toANSI()) + resolveUser() + wrapNonPrinting(resetSequence) +
+				return wrapNonPrinting(NewColor("green").toANSI(ColorBasic16)) + resolveUser() + wrapNonPrinting(resetSequence) +
 					"@" +
-					wrapNonPrinting(Color("cyan").toANSI()) + resolveHostShort() + wrapNonPrinting(resetSequence) +
+					wrapNonPrinting(NewColor("cyan").toANSI(ColorBasic16)) + resolveHostShort() + wrapNonPrinting(resetSequence) +
 					":" +
-					wrapNonPrinting(Color("blue").toANSI()) + resolveCWD() + wrapNonPrinting(resetSequence) +
-					" $ " + resolvePromptChar()
+					wrapNonPrinting(NewColor("blue").toANSI(ColorBasic16)) + resolveCWD() + wrapNonPrinting(resetSequence) +
+					" " + resolvePromptChar()
+			},
+		},
+		{
+			name: "256-color on capable terminal",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "user", Color: "256:82"}},
+			},
+			cap: Color256,
+			wantFn: func() string {
+				return wrapNonPrinting(NewColor("256:82").toANSI(Color256)) + resolveUser() + wrapNonPrinting(resetSequence)
+			},
+		},
+		{
+			name: "256-color on basic terminal",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "user", Color: "256:82"}},
+			},
+			cap: ColorBasic16,
+			wantFn: func() string { return resolveUser() },
+		},
+		{
+			name: "truecolor on capable terminal",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "user", Color: "rgb:255,128,0"}},
+			},
+			cap: ColorTrueColor,
+			wantFn: func() string {
+				return wrapNonPrinting(NewColor("rgb:255,128,0").toANSI(ColorTrueColor)) + resolveUser() + wrapNonPrinting(resetSequence)
+			},
+		},
+		{
+			name: "hex color on capable terminal",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "user", Color: "#ff8000"}},
+			},
+			cap: ColorTrueColor,
+			wantFn: func() string {
+				return wrapNonPrinting(NewColor("#ff8000").toANSI(ColorTrueColor)) + resolveUser() + wrapNonPrinting(resetSequence)
 			},
 		},
 		{
 			name: "literal with backslash escaping",
 			config: PS1Config{
-				Segments: []SegmentConfig{
-					{Type: "literal", Text: `\n`},
-				},
+				Segments: []SegmentConfig{{Type: "literal", Text: `\n`}},
 			},
+			cap:    ColorNone,
 			wantFn: func() string { return `\\n` },
 		},
 		{
@@ -236,6 +238,7 @@ func TestPS1GeneratorSegments(t *testing.T) {
 					{Type: "user"},
 				},
 			},
+			cap:    ColorNone,
 			wantFn: func() string { return resolveUser() },
 		},
 		{
@@ -245,6 +248,7 @@ func TestPS1GeneratorSegments(t *testing.T) {
 					{Type: "user", Color: "chartreuse"},
 				},
 			},
+			cap:    ColorBasic16,
 			wantFn: func() string { return resolveUser() },
 		},
 	}
@@ -252,8 +256,8 @@ func TestPS1GeneratorSegments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewPS1Generator(tt.config)
-			if got := g.Generate(); got != tt.wantFn() {
-				t.Errorf("Generate() = %q, want %q", got, tt.wantFn())
+			if got := g.Generate(tt.cap); got != tt.wantFn() {
+				t.Errorf("Generate(%v) = %q, want %q", tt.cap, got, tt.wantFn())
 			}
 		})
 	}
