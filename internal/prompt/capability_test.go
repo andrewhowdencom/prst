@@ -29,8 +29,8 @@ func TestDetectColorCapability(t *testing.T) {
 		{"always non-tty", "always", false, false, "", "xterm", "", false, ColorBasic16},
 		{"always truecolor", "always", false, false, "", "xterm", "truecolor", false, ColorTrueColor},
 		{"always 256", "always", false, false, "", "xterm-256color", "", false, Color256},
-		{"always respects NO_COLOR", "always", false, false, "1", "xterm", "truecolor", true, ColorNone},
-		{"always respects dumb", "always", false, false, "", "dumb", "truecolor", true, ColorNone},
+		{"always overrides NO_COLOR", "always", false, false, "1", "xterm", "truecolor", true, ColorTrueColor},
+		{"always overrides dumb", "always", false, false, "", "dumb", "truecolor", true, ColorTrueColor},
 
 		// Detection from COLORTERM
 		{"truecolor explicit", "auto", false, false, "", "xterm", "truecolor", true, ColorTrueColor},

@@ -24,14 +24,15 @@ const (
 // Resolution order (first match wins):
 //
 //   1. color flag == "never" → ColorNone
-//   2. color.enabled: false in config → ColorNone
-//   3. $NO_COLOR env var present → ColorNone
-//   4. $TERM == "dumb" → ColorNone
-//   5. color flag == "auto" and non-TTY and not explicitly enabled → ColorNone
-//   6. color flag == "auto" and non-TTY and explicitly enabled → ColorTrueColor
-//   7. $COLORTERM == "truecolor" || "24bit" → ColorTrueColor
-//   8. $TERM contains "256color" → Color256
-//   9. Default → ColorBasic16
+//   2. color flag == "always" → skip all disable checks, detect capability
+//   3. color.enabled: false in config → ColorNone
+//   4. $NO_COLOR env var present → ColorNone
+//   5. $TERM == "dumb" → ColorNone
+//   6. color flag == "auto" and non-TTY and not explicitly enabled → ColorNone
+//   7. color flag == "auto" and non-TTY and explicitly enabled → ColorTrueColor
+//   8. $COLORTERM == "truecolor" || "24bit" → ColorTrueColor
+//   9. $TERM contains "256color" → Color256
+//  10. Default → ColorBasic16
 func DetectColorCapability(
 	colorFlag string,
 	colorEnabledSet bool,
@@ -46,7 +47,15 @@ func DetectColorCapability(
 		return ColorNone
 	}
 
-	// These explicit disable signals are always respected.
+	// "always" means the caller knows colors should be emitted (e.g. init
+	// scripts wrapping the output in non-printing sequence markers). Skip
+	// all disable checks and detect capability from the environment only.
+	if colorFlag == "always" {
+		return detectFromEnvironment(colorTermEnv, termEnv)
+	}
+
+	// colorFlag == "auto" from here on.
+
 	if colorEnabledSet && !colorEnabled {
 		return ColorNone
 	}
@@ -57,20 +66,19 @@ func DetectColorCapability(
 		return ColorNone
 	}
 
-	// In auto mode, suppress colors for non-TTYs unless the user
-	// has explicitly enabled them via configuration.
-	if colorFlag == "auto" && !isTerminal {
+	if !isTerminal {
 		if colorEnabledSet && colorEnabled {
 			return ColorTrueColor
 		}
 		return ColorNone
 	}
 
-	// At this point:
-	//   - colorFlag is "auto" and we are in a TTY, OR
-	//   - colorFlag is "always" (isTerminal is irrelevant).
-	// Detect capability from the environment.
+	return detectFromEnvironment(colorTermEnv, termEnv)
+}
 
+// detectFromEnvironment returns the color capability based on COLORTERM
+// and TERM environment variables.
+func detectFromEnvironment(colorTermEnv, termEnv string) ColorCapability {
 	if colorTermEnv == "truecolor" || colorTermEnv == "24bit" {
 		return ColorTrueColor
 	}
