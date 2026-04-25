@@ -4,9 +4,7 @@
 
 See [Bash/Prompt customization](https://wiki.archlinux.org/title/Bash/Prompt_customization) for background.
 
-## Usage
-
-Add `prst` to your `.bashrc` so Bash evaluates it before every prompt:
+## Quick Start
 
 ```bash
 PS1='$(prst 1)'
@@ -17,94 +15,20 @@ PS1='$(prst 1)'
 By default, with no configuration, it emits a plain classic prompt:
 
 ```
-user@host:/full/path$ 
+user@host:/full/path$
 ```
 
-### Available commands
+## Documentation
 
-```bash
-prst 0   # Print PS0 string (pre-command)
-prst 1   # Print PS1 string (primary prompt)
-prst 2   # Print PS2 string (continuation prompt)
-prst 3   # Print PS3 string (select prompt)
-prst 4   # Print PS4 string (debug prefix)
-prst version          # Show version
-prst --log-level debug 1   # Adjust log level for a single run
-prst --no-color 1        # Disable colors for a single run
-```
+Full documentation is available at the links below, structured according to the [Diátaxis framework](https://diataxis.fr).
 
-### Configuration
-
-Configuration is read from (in order of precedence):
-
-1. Command-line flags (`--log-level`, `--no-color`)
-2. Environment variables (`PRST_LOG_LEVEL`)
-3. Config file at `$XDG_CONFIG_HOME/prst/config.yaml`
-
-#### PS1 segments
-
-The `ps1` key defines the primary prompt as an ordered list of segments:
-
-```yaml
-ps1:
-  segments:
-    - type: user        color: green
-    - type: literal     text: "@"
-    - type: host         color: cyan
-    - type: literal     text: ":"
-    - type: cwd          color: blue
-    - type: literal     text: " "
-    - type: prompt_char
-```
-
-Each colored segment is automatically wrapped in Bash non-printing byte markers, so Bash calculates cursor position correctly.
-
-#### Segment types
-
-| Type | Description |
+| | |
 |---|---|
-| `user` | Current username (`$USER`) |
-| `host` | Short hostname (first component) |
-| `host_full` | Full hostname (FQDN) |
-| `cwd` | Current working directory (`~` substituted for `$HOME`) |
-| `cwd_basename` | Basename of cwd |
-| `prompt_char` | `#` for root, `$` otherwise |
-| `time_short` | Current time as `HH:MM` |
-| `time_full` | Current time as `HH:MM:SS` |
-| `date` | Current date as `Weekday Month Day` |
-| `newline` | Line break |
-| `literal` | Free-form text (backslashes are escaped automatically) |
-
-#### Colors
-
-`prst` auto-detects your terminal's color capability and emits the richest format it can safely use.
-
-**Detection order** (first match wins):
-1. `--no-color` flag or `color.enabled: false` → no colors
-2. `$NO_COLOR` environment variable set → no colors
-3. `$TERM == dumb` → no colors
-4. Non-TTY and not explicitly enabled → no colors
-5. `$COLORTERM == truecolor` or `24bit` → 24-bit RGB
-6. `$TERM` contains `256color` → 256-color palette
-7. Default → 16 standard ANSI colors
-
-You can override auto-detection in your config:
-
-```yaml
-color:
-  enabled: true   # Force colors even when piped
-```
-
-**Color formats** (segment `color` field):
-
-| Format | Example | Terminal needed |
-|---|---|---|
-| Named basic | `green`, `bright_blue` | Any terminal |
-| 256-color | `256:82` | 256-color or better |
-| RGB decimal | `rgb:255,128,0` | True-color |
-| RGB hex | `#ff8000` | True-color |
-
-If a richer color format is requested but the terminal doesn't support it, the segment renders uncolored (the text still appears).
+| 🎓 [Getting Started](docs/tutorials/getting-started.md) | Step-by-step tutorial for new users. |
+| 👐 [How-to Guides](docs/how-to/customize-prompt.md) | Recipes for common customization tasks. |
+| 📖 [Configuration Reference](docs/reference/configuration.md) | Full config schema, segment types, and color formats. |
+| 📖 [Command Reference](docs/reference/commands.md) | CLI commands, flags, and environment variables. |
+| 💡 [Design Rationale](docs/explanation/design.md) | Why `prst` works the way it does. |
 
 ## Development
 
@@ -118,3 +42,5 @@ task test       # Run tests
 task lint       # Run linters
 task validate   # Run all of the above
 ```
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the full contributor guide and [ARCHITECTURE.md](ARCHITECTURE.md) for system design details.

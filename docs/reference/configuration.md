@@ -1,0 +1,113 @@
+# Configuration Reference
+
+This page describes the full configuration schema for `prst`.
+
+## Config file location
+
+`prst` reads its configuration from:
+
+```
+$XDG_CONFIG_HOME/prst/config.yaml
+```
+
+If `$XDG_CONFIG_HOME` is unset, it falls back to `~/.config/prst/config.yaml`.
+
+## Precedence
+
+Configuration values are resolved in this order (first match wins):
+
+1. Command-line flags (`--log-level`, `--no-color`)
+2. Environment variables (`PRST_LOG_LEVEL`, `PRST_COLOR_ENABLED`, …)
+3. Config file at `$XDG_CONFIG_HOME/prst/config.yaml`
+
+Environment variable names map nested config keys by replacing `.` with `_`. For example, `color.enabled` becomes `PRST_COLOR_ENABLED`.
+
+## Top-level keys
+
+### `ps1`
+
+Defines the primary prompt as an ordered list of segments.
+
+```yaml
+ps1:
+  segments:
+    - type: user        color: green
+    - type: literal     text: "@"
+    - type: host         color: cyan
+    - type: literal     text: ":"
+    - type: cwd          color: blue
+    - type: literal     text: " "
+    - type: prompt_char
+```
+
+If `ps1` is missing or empty, `prst` falls back to the plain default prompt:
+
+```
+user@host:/full/path$
+```
+
+### `color`
+
+Controls color behavior globally.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `color.enabled` | `bool` | auto-detected | Force colors on (`true`) or off (`false`). |
+
+## Segment types
+
+Each segment in `ps1.segments` has the following fields:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | `string` | Yes | Segment type identifier. |
+| `color` | `string` | No | Color specification (see [Color formats](#color-formats)). |
+| `text` | `string` | No | Text content for `literal` segments. |
+
+### Available segment types
+
+| Type | Description |
+|---|---|
+| `user` | Current username (`$USER`). |
+| `host` | Short hostname (first component before `.`). |
+| `host_full` | Full hostname (FQDN). |
+| `cwd` | Current working directory (`~` substituted for `$HOME`). |
+| `cwd_basename` | Basename of the current working directory. |
+| `prompt_char` | `#` for root, `$` otherwise. |
+| `time_short` | Current time as `HH:MM`. |
+| `time_full` | Current time as `HH:MM:SS`. |
+| `date` | Current date as `Weekday Month Day`. |
+| `newline` | Line break. |
+| `literal` | Free-form text. Backslashes are escaped automatically so Bash does not interpret them as prompt escape sequences. |
+
+## Color formats
+
+`prst` auto-detects your terminal's color capability and emits the richest format it can safely use.
+
+### Detection order
+
+1. `--no-color` flag or `color.enabled: false` → no colors
+2. `$NO_COLOR` environment variable set → no colors
+3. `$TERM == dumb` → no colors
+4. Non-TTY and not explicitly enabled → no colors
+5. Non-TTY and explicitly enabled → 24-bit RGB
+6. `$COLORTERM == truecolor` or `24bit` → 24-bit RGB
+7. `$TERM` contains `256color` → 256-color palette
+8. Default → 16 standard ANSI colors
+
+### Supported formats
+
+| Format | Example | Terminal requirement |
+|---|---|---|
+| Named basic | `green`, `bright_blue` | Any terminal |
+| 256-color index | `256:82` | 256-color or better |
+| RGB decimal | `rgb:255,128,0` | True-color |
+| RGB hex | `#ff8000` | True-color |
+
+If a richer color format is requested but the terminal does not support it, the segment renders uncolored (the text still appears).
+
+## Non-printing byte markers
+
+`prst` automatically wraps ANSI color escape sequences in Bash non-printing byte markers (`\x01` / `\x02`, the byte equivalents of `\[` and `\]`). This ensures Bash calculates cursor position correctly, preventing line-wrapping bugs when editing long commands.
+
+You do not need to configure this — it happens automatically for every colored segment.
