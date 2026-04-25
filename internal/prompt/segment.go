@@ -8,35 +8,55 @@ import (
 )
 
 // SegmentConfig describes a single segment of a PS1 prompt.
+// The Type field determines which other fields are relevant:
+//
+//   - "user":       no extra fields
+//   - "host":       Mode ("short"|"full", default "short")
+//   - "cwd":        Mode ("full"|"basename", default "full")
+//   - "prompt":     Style ("char", default "char")
+//   - "time":       Format ("short"|"full"|"date", default "short")
+//   - "newline":    no extra fields
+//   - "literal":    Text (free-form text)
 type SegmentConfig struct {
-	Type  string `mapstructure:"type"`
-	Color string `mapstructure:"color"`
-	Text  string `mapstructure:"text"`
+	Type   string `mapstructure:"type"`
+	Color  string `mapstructure:"color"`
+	Mode   string `mapstructure:"mode"`   // host, cwd
+	Format string `mapstructure:"format"` // time
+	Style  string `mapstructure:"style"`  // prompt
+	Text   string `mapstructure:"text"`   // literal
 }
 
-// resolveSegment returns the runtime-resolved string for a segment type.
-func resolveSegment(segType string) string {
-	switch segType {
+// Content returns the runtime-resolved string for this segment.
+// If the segment type is unknown, it returns an empty string.
+func (s SegmentConfig) Content() string {
+	switch s.Type {
 	case "user":
 		return resolveUser()
 	case "host":
+		if s.Mode == "full" {
+			return resolveHostFull()
+		}
 		return resolveHostShort()
-	case "host_full":
-		return resolveHostFull()
 	case "cwd":
+		if s.Mode == "basename" {
+			return resolveCWDBasename()
+		}
 		return resolveCWD()
-	case "cwd_basename":
-		return resolveCWDBasename()
-	case "prompt_char":
+	case "prompt":
 		return resolvePromptChar()
-	case "time_short":
-		return time.Now().Format("15:04")
-	case "time_full":
-		return time.Now().Format("15:04:05")
-	case "date":
-		return time.Now().Format("Mon Jan 2")
+	case "time":
+		switch s.Format {
+		case "full":
+			return time.Now().Format("15:04:05")
+		case "date":
+			return time.Now().Format("Mon Jan 2")
+		default:
+			return time.Now().Format("15:04")
+		}
 	case "newline":
 		return "\n"
+	case "literal":
+		return literalEscapes(s.Text)
 	default:
 		return ""
 	}

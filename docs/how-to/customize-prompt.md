@@ -17,13 +17,16 @@ See the [Reference](../reference/configuration.md) for all supported color forma
 
 ## How do I show only the current directory name?
 
-Use the `cwd_basename` segment instead of `cwd`:
+Use the `cwd` segment with `mode: basename`:
 
 ```yaml
 ps1:
   segments:
-    - type: cwd_basename  color: blue
-    - type: literal       text: " $"
+    - type: cwd
+      mode: basename
+      color: blue
+    - type: literal
+      text: " $"
 ```
 
 ## How do I add the current time?
@@ -31,12 +34,15 @@ ps1:
 ```yaml
 ps1:
   segments:
-    - type: time_short    color: yellow
-    - type: literal       text: " "
-    - type: cwd           color: blue
+    - type: time
+      color: yellow
+    - type: literal
+      text: " "
+    - type: cwd
+      color: blue
 ```
 
-Use `time_full` for seconds (`HH:MM:SS`) or `date` for `Weekday Month Day`.
+Use `format: full` for seconds (`HH:MM:SS`) or `format: date` for `Weekday Month Day`.
 
 ## How do I force colors even when piped?
 
@@ -86,26 +92,28 @@ Note: `literal` segments automatically escape backslashes so Bash does not inter
 
 ## How do I show the full hostname?
 
-Use the `host_full` segment instead of `host`:
+Use the `host` segment with `mode: full`:
 
 ```yaml
 ps1:
   segments:
     - type: user         color: green
     - type: literal       text: "@"
-    - type: host_full     color: cyan
+    - type: host
+      mode: full
+      color: cyan
 ```
 
 ## How do I make the prompt look different for root?
 
-The `prompt_char` segment already adapts: it prints `#` when running as root and `$` otherwise. You can pair it with a colored segment for extra visibility:
+The `prompt` segment already adapts: it prints `#` when running as root and `$` otherwise. You can pair it with a colored segment for extra visibility:
 
 ```yaml
 ps1:
   segments:
     - type: user         color: red
     - type: literal       text: "# "
-    - type: prompt_char
+    - type: prompt
 ```
 
 ## How do I debug my configuration?

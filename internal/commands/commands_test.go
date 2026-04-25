@@ -222,9 +222,9 @@ func TestInstallCommandAppendAndRemove(t *testing.T) {
 
 func TestStripBlock(t *testing.T) {
 	tests := []struct {
-		name    string
-		input   string
-		want    string
+		name  string
+		input string
+		want  string
 	}{
 		{
 			name:  "no block",
@@ -232,17 +232,17 @@ func TestStripBlock(t *testing.T) {
 			want:  "echo hello\n",
 		},
 		{
-			name: "single block",
+			name:  "single block",
 			input: fmt.Sprintf("echo hello\n%s\neval init\n%s\necho world\n", prstBlockStart, prstBlockEnd),
 			want:  "echo hello\necho world\n",
 		},
 		{
-			name: "block at start",
+			name:  "block at start",
 			input: fmt.Sprintf("%s\neval init\n%s\necho world\n", prstBlockStart, prstBlockEnd),
 			want:  "echo world\n",
 		},
 		{
-			name: "block at end",
+			name:  "block at end",
 			input: fmt.Sprintf("echo hello\n%s\neval init\n%s\n", prstBlockStart, prstBlockEnd),
 			want:  "echo hello\n",
 		},

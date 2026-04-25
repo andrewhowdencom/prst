@@ -26,7 +26,10 @@ var defaultEnvReader EnvReader = osEnvReader{}
 
 // DefaultColorCapabilityWithEnv reads environment state through the provided
 // EnvReader and returns the detected color capability for stdout.
-func DefaultColorCapabilityWithEnv(colorFlag string, v interface{ IsSet(string) bool; GetBool(string) bool }, env EnvReader) ColorCapability {
+func DefaultColorCapabilityWithEnv(colorFlag string, v interface {
+	IsSet(string) bool
+	GetBool(string) bool
+}, env EnvReader) ColorCapability {
 	colorEnabledSet := v.IsSet("color.enabled")
 	colorEnabled := v.GetBool("color.enabled")
 	return DetectColorCapability(
@@ -42,6 +45,9 @@ func DefaultColorCapabilityWithEnv(colorFlag string, v interface{ IsSet(string) 
 
 // DefaultColorCapability is a convenience wrapper that uses the production OS
 // environment.
-func DefaultColorCapability(colorFlag string, v interface{ IsSet(string) bool; GetBool(string) bool }) ColorCapability {
+func DefaultColorCapability(colorFlag string, v interface {
+	IsSet(string) bool
+	GetBool(string) bool
+}) ColorCapability {
 	return DefaultColorCapabilityWithEnv(colorFlag, v, defaultEnvReader)
 }

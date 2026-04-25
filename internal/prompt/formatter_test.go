@@ -4,10 +4,10 @@ import "testing"
 
 func TestFormatForShell(t *testing.T) {
 	tests := []struct {
-		name   string
-		raw    string
-		shell  string
-		want   string
+		name  string
+		raw   string
+		shell string
+		want  string
 	}{
 		{
 			name:  "bash single color",

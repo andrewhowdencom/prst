@@ -17,7 +17,7 @@ If `$XDG_CONFIG_HOME` is unset, it falls back to `~/.config/prst/config.yaml`.
 Configuration values are resolved in this order (first match wins):
 
 1. Command-line flags (`--log-level`, `--color`)
-2. Environment variables (`PRST_LOG_LEVEL`, `PRST_COLOR_ENABLED`, …)
+2. Environment variables (`PRST_LOG_LEVEL`, `PRST_COLOR_ENABLED`, ...)
 3. Config file at `$XDG_CONFIG_HOME/prst/config.yaml`
 
 Environment variable names map nested config keys by replacing `.` with `_`. For example, `color.enabled` becomes `PRST_COLOR_ENABLED`.
@@ -26,7 +26,7 @@ Environment variable names map nested config keys by replacing `.` with `_`. For
 
 ### `ps1`
 
-Defines the primary prompt as an ordered list of segments.
+Defines the primary prompt as an ordered list of segments. Each segment has a `type` that determines its behavior and which additional fields are relevant.
 
 ```yaml
 ps1:
@@ -37,7 +37,7 @@ ps1:
     - type: literal     text: ":"
     - type: cwd          color: blue
     - type: literal     text: " "
-    - type: prompt_char
+    - type: prompt
 ```
 
 If `ps1` is missing or empty, `prst` falls back to the plain default prompt:
@@ -56,29 +56,90 @@ Controls color behavior globally.
 
 ## Segment types
 
-Each segment in `ps1.segments` has the following fields:
+Every segment in `ps1.segments` has the following common fields:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `type` | `string` | Yes | Segment type identifier. |
 | `color` | `string` | No | Color specification (see [Color formats](#color-formats)). |
-| `text` | `string` | No | Text content for `literal` segments. |
 
-### Available segment types
+Some segment types accept additional type-specific fields:
 
-| Type | Description |
+### `user`
+
+Current username (`$USER`). No extra fields.
+
+### `host`
+
+Hostname segment. Supports an optional `mode`:
+
+| Mode | Description |
 |---|---|
-| `user` | Current username (`$USER`). |
-| `host` | Short hostname (first component before `.`). |
-| `host_full` | Full hostname (FQDN). |
-| `cwd` | Current working directory (`~` substituted for `$HOME`). |
-| `cwd_basename` | Basename of the current working directory. |
-| `prompt_char` | `#` for root, `$` otherwise. |
-| `time_short` | Current time as `HH:MM`. |
-| `time_full` | Current time as `HH:MM:SS`. |
-| `date` | Current date as `Weekday Month Day`. |
-| `newline` | Line break. |
-| `literal` | Free-form text. Backslashes are escaped automatically so Bash does not interpret them as prompt escape sequences. |
+| `short` (default) | Short hostname (first component before `.`). |
+| `full` | Full hostname (FQDN). |
+
+```yaml
+- type: host
+  mode: full
+  color: cyan
+```
+
+### `cwd`
+
+Current working directory. Supports an optional `mode`:
+
+| Mode | Description |
+|---|---|
+| `full` (default) | Full path (`~` substituted for `$HOME`). |
+| `basename` | Only the current directory name. |
+
+```yaml
+- type: cwd
+  mode: basename
+  color: blue
+```
+
+### `prompt`
+
+Prompt character (`#` for root, `$` otherwise). No extra fields.
+
+```yaml
+- type: prompt
+  color: red
+```
+
+### `time`
+
+Current date or time. Supports an optional `format`:
+
+| Format | Description |
+|---|---|
+| `short` (default) | `HH:MM` |
+| `full` | `HH:MM:SS` |
+| `date` | `Weekday Month Day` |
+
+```yaml
+- type: time
+  format: full
+  color: yellow
+```
+
+### `newline`
+
+Line break. No extra fields.
+
+```yaml
+- type: newline
+```
+
+### `literal`
+
+Free-form text. Requires the `text` field. Backslashes are escaped automatically so Bash does not interpret them as prompt escape sequences.
+
+```yaml
+- type: literal
+  text: "❯ "
+```
 
 ## Color formats
 

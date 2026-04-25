@@ -59,7 +59,7 @@ ps1:
     - type: literal     text: ":"
     - type: cwd          color: blue
     - type: literal     text: " "
-    - type: prompt_char
+    - type: prompt
 ```
 
 This defines a prompt that looks like:

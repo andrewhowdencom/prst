@@ -86,36 +86,41 @@ func TestResolvePromptChar(t *testing.T) {
 	}
 }
 
-func TestResolveSegment(t *testing.T) {
+func TestSegmentConfigContent(t *testing.T) {
 	tests := []struct {
 		name string
-		typ  string
+		seg  SegmentConfig
 		want string
 	}{
-		{"user", "user", resolveUser()},
-		{"host", "host", resolveHostShort()},
-		{"host_full", "host_full", resolveHostFull()},
-		{"cwd", "cwd", resolveCWD()},
-		{"cwd_basename", "cwd_basename", resolveCWDBasename()},
-		{"prompt_char", "prompt_char", resolvePromptChar()},
-		{"time_short", "time_short", time.Now().Format("15:04")},
-		{"time_full", "time_full", time.Now().Format("15:04:05")},
-		{"date", "date", time.Now().Format("Mon Jan 2")},
-		{"newline", "newline", "\n"},
-		{"unknown", "unknown_thing", ""},
+		{"user", SegmentConfig{Type: "user"}, resolveUser()},
+		{"host default", SegmentConfig{Type: "host"}, resolveHostShort()},
+		{"host short", SegmentConfig{Type: "host", Mode: "short"}, resolveHostShort()},
+		{"host full", SegmentConfig{Type: "host", Mode: "full"}, resolveHostFull()},
+		{"cwd default", SegmentConfig{Type: "cwd"}, resolveCWD()},
+		{"cwd full", SegmentConfig{Type: "cwd", Mode: "full"}, resolveCWD()},
+		{"cwd basename", SegmentConfig{Type: "cwd", Mode: "basename"}, resolveCWDBasename()},
+		{"prompt", SegmentConfig{Type: "prompt"}, resolvePromptChar()},
+		{"time short default", SegmentConfig{Type: "time"}, time.Now().Format("15:04")},
+		{"time short explicit", SegmentConfig{Type: "time", Format: "short"}, time.Now().Format("15:04")},
+		{"time full", SegmentConfig{Type: "time", Format: "full"}, time.Now().Format("15:04:05")},
+		{"date", SegmentConfig{Type: "time", Format: "date"}, time.Now().Format("Mon Jan 2")},
+		{"newline", SegmentConfig{Type: "newline"}, "\n"},
+		{"literal", SegmentConfig{Type: "literal", Text: "hello"}, "hello"},
+		{"literal escaped", SegmentConfig{Type: "literal", Text: `\n`}, `\\n`},
+		{"unknown", SegmentConfig{Type: "unknown_thing"}, ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := resolveSegment(tt.typ)
-			if tt.typ == "time_short" || tt.typ == "time_full" || tt.typ == "date" {
+			got := tt.seg.Content()
+			if tt.seg.Type == "time" || (tt.seg.Type == "time" && tt.seg.Format == "date") {
 				if got == "" {
-					t.Errorf("resolveSegment(%q) = empty, want non-empty", tt.typ)
+					t.Errorf("Content() = empty, want non-empty")
 				}
 				return
 			}
 			if got != tt.want {
-				t.Errorf("resolveSegment(%q) = %q, want %q", tt.typ, got, tt.want)
+				t.Errorf("Content() = %q, want %q", got, tt.want)
 			}
 		})
 	}
@@ -171,17 +176,53 @@ func TestPS1GeneratorSegments(t *testing.T) {
 					{Type: "literal", Text: ":"},
 					{Type: "cwd", Color: "blue"},
 					{Type: "literal", Text: " "},
-					{Type: "prompt_char"},
+					{Type: "prompt"},
 				},
 			},
 			cap: ColorBasic16,
 			wantFn: func() string {
-			return NewColor("green").toANSI(ColorBasic16) + resolveUser() + resetSequence +
-				"@" +
-				NewColor("cyan").toANSI(ColorBasic16) + resolveHostShort() + resetSequence +
-				":" +
-				NewColor("blue").toANSI(ColorBasic16) + resolveCWD() + resetSequence +
-				" " + resolvePromptChar()
+				return NewColor("green").toANSI(ColorBasic16) + resolveUser() + resetSequence +
+					"@" +
+					NewColor("cyan").toANSI(ColorBasic16) + resolveHostShort() + resetSequence +
+					":" +
+					NewColor("blue").toANSI(ColorBasic16) + resolveCWD() + resetSequence +
+					" " + resolvePromptChar()
+			},
+		},
+		{
+			name: "host full mode",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "host", Mode: "full"}},
+			},
+			cap:    ColorNone,
+			wantFn: func() string { return resolveHostFull() },
+		},
+		{
+			name: "cwd basename mode",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "cwd", Mode: "basename"}},
+			},
+			cap:    ColorNone,
+			wantFn: func() string { return resolveCWDBasename() },
+		},
+		{
+			name: "time full format",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "time", Format: "full"}},
+			},
+			cap: ColorNone,
+			wantFn: func() string {
+				return time.Now().Format("15:04:05")
+			},
+		},
+		{
+			name: "time date format",
+			config: PS1Config{
+				Segments: []SegmentConfig{{Type: "time", Format: "date"}},
+			},
+			cap: ColorNone,
+			wantFn: func() string {
+				return time.Now().Format("Mon Jan 2")
 			},
 		},
 		{
@@ -199,7 +240,7 @@ func TestPS1GeneratorSegments(t *testing.T) {
 			config: PS1Config{
 				Segments: []SegmentConfig{{Type: "user", Color: "256:82"}},
 			},
-			cap: ColorBasic16,
+			cap:    ColorBasic16,
 			wantFn: func() string { return resolveUser() },
 		},
 		{

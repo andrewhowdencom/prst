@@ -11,10 +11,10 @@ import (
 // review.
 func TestInitScriptGolden(t *testing.T) {
 	tests := []struct {
-		name     string
-		sh       Shell
-		numbers  []int
-		golden   string
+		name    string
+		sh      Shell
+		numbers []int
+		golden  string
 	}{
 		{"bash 1", Bash, []int{1}, "bash_init_1.txt"},
 		{"zsh 1", Zsh, []int{1}, "zsh_init_1.txt"},

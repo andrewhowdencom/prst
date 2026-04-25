@@ -23,7 +23,7 @@ type mockViper struct {
 	bool  map[string]bool
 }
 
-func (m *mockViper) IsSet(key string) bool { return m.isSet[key] }
+func (m *mockViper) IsSet(key string) bool   { return m.isSet[key] }
 func (m *mockViper) GetBool(key string) bool { return m.bool[key] }
 
 func TestDefaultColorCapabilityWithEnv(t *testing.T) {

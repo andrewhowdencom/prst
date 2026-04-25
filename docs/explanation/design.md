@@ -23,7 +23,7 @@ Many prompt tools generate a static string once and embed shell escape sequences
 `prst` resolves every value at runtime on each invocation. This has several benefits:
 
 - **Accurate cwd**: the path updates correctly even when `$PWD` is manipulated by external tools.
-- **Accurate time**: `time_short` and `time_full` show the exact moment the prompt is rendered, not when the rc file was sourced.
+- **Accurate time**: `time` segments show the exact moment the prompt is rendered, not when the rc file was sourced.
 - **Portability**: the same YAML config works on any system without relying on shell-specific prompt escape sequences.
 
 The trade-off is a small per-prompt fork/exec overhead. For interactive shells, this is negligible (well under a millisecond on modern hardware).

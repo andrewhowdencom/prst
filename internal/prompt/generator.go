@@ -71,14 +71,9 @@ func (g *PS1Generator) Generate(cap ColorCapability) string {
 }
 
 func (g *PS1Generator) segmentContent(seg SegmentConfig) string {
-	if seg.Type == "literal" {
-		return literalEscapes(seg.Text)
-	}
-
-	content := resolveSegment(seg.Type)
-	if content == "" {
+	content := seg.Content()
+	if content == "" && seg.Type != "" {
 		slog.Warn("unknown segment type", "type", seg.Type)
 	}
-
 	return content
 }

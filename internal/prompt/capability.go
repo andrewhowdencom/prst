@@ -19,15 +19,15 @@ const (
 //
 // Resolution order (first match wins):
 //
-//   1. color flag == "never" → ColorNone
-//   2. color flag == "always" → skip all disable checks, detect capability
-//   3. color.enabled: false in config → ColorNone
-//   4. $NO_COLOR env var present → ColorNone
-//   5. $TERM == "dumb" → ColorNone
-//   6. color flag == "auto" and non-TTY and not explicitly enabled → ColorNone
-//   7. color flag == "auto" and non-TTY and explicitly enabled → ColorTrueColor
-//   8. $COLORTERM == "truecolor" || "24bit" → ColorTrueColor
-//   9. $TERM contains "256color" → Color256
+//  1. color flag == "never" → ColorNone
+//  2. color flag == "always" → skip all disable checks, detect capability
+//  3. color.enabled: false in config → ColorNone
+//  4. $NO_COLOR env var present → ColorNone
+//  5. $TERM == "dumb" → ColorNone
+//  6. color flag == "auto" and non-TTY and not explicitly enabled → ColorNone
+//  7. color flag == "auto" and non-TTY and explicitly enabled → ColorTrueColor
+//  8. $COLORTERM == "truecolor" || "24bit" → ColorTrueColor
+//  9. $TERM contains "256color" → Color256
 //  10. Default → ColorBasic16
 func DetectColorCapability(
 	colorFlag string,
