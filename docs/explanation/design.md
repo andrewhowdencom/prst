@@ -53,7 +53,7 @@ Placing the config at `$XDG_CONFIG_HOME/prst/config.yaml` (falling back to `~/.c
 
 Terminal color support varies widely: some terminals support only 16 colors, others 256, and modern terminals support 24-bit RGB. `prst` auto-detects the terminal's capability so users do not need to configure it manually in most cases.
 
-The detection chain explicitly honors user overrides first (`--no-color`, `color.enabled: false`, `$NO_COLOR`) before inspecting `$TERM`, `$COLORTERM`, and TTY state. This follows the [NO_COLOR convention](https://no-color.org/) and respects accessibility preferences while still taking advantage of rich color support when available.
+The detection chain explicitly honors user overrides first (`--color=never`, `color.enabled: false`, `$NO_COLOR`) before inspecting `$TERM`, `$COLORTERM`, and TTY state. This follows the [NO_COLOR convention](https://no-color.org/) and respects accessibility preferences while still taking advantage of rich color support when available.
 
 ## Why shell-specific init scripts?
 

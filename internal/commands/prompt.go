@@ -32,8 +32,8 @@ for future expansion and currently print nothing.`,
 			// Args were validated above, so strconv.Atoi cannot fail here.
 			n, _ := strconv.Atoi(args[0])
 			if n == 1 {
-				noColor, _ := cmd.Flags().GetBool("no-color")
-				cap := prompt.DefaultColorCapability(noColor, v)
+				colorFlag, _ := cmd.Flags().GetString("color")
+				cap := prompt.DefaultColorCapability(colorFlag, v)
 				_, err := fmt.Fprintln(cmd.OutOrStdout(), g.Generate(cap))
 				return err
 			}

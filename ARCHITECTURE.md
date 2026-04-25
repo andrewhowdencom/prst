@@ -18,7 +18,7 @@
 ```
 cmd/prst/main.go              # Minimal entry point: delegates to DI graph.
 internal/
-  app/app.go                  # Cobra root command + global flags (--log-level, --no-color).
+  app/app.go                  # Cobra root command + global flags (--log-level, --color).
   commands/commands.go        # Subcommands: 0, 1, 2, 3, 4, init, install, version.
   configuration/
     configuration.go          # Viper setup: env prefix PRST_, XDG config path, YAML read.
@@ -58,7 +58,7 @@ internal/
 
 4. **Command Dispatch** (`internal/commands`)
    - `prst prompt 1` invokes the prompt command, which:
-     - Reads the `--no-color` flag.
+     - Reads the `--color` flag.
      - Calls `prompt.DefaultColorCapability(noColor, v)` to determine terminal color support.
      - Invokes `g.Generate(cap)` and writes the result to stdout.
 
@@ -115,7 +115,7 @@ Google Wire generates the object graph at build time rather than using reflectio
 
 ### Color Capability Detection
 
-`prst` auto-detects the richest color format the terminal can safely display. The detection chain (see `internal/prompt/capability.go`) honors explicit user overrides first (`--no-color`, `color.enabled: false`, `$NO_COLOR`) before inspecting `$TERM`, `$COLORTERM`, and TTY state. This follows the [NO_COLOR convention](https://no-color.org/) while still supporting truecolor for modern terminals.
+`prst` auto-detects the richest color format the terminal can safely display. The detection chain (see `internal/prompt/capability.go`) honors explicit user overrides first (`--color=never`, `color.enabled: false`, `$NO_COLOR`) before inspecting `$TERM`, `$COLORTERM`, and TTY state. This follows the [NO_COLOR convention](https://no-color.org/) while still supporting truecolor for modern terminals.
 
 ### Shell-Specific Init Scripts
 

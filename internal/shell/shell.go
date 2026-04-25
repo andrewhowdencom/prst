@@ -94,9 +94,9 @@ func (s Shell) initFunction(n int) string {
 	name := "prst_ps" + strconv.Itoa(n)
 	switch s {
 	case Bash:
-		return fmt.Sprintf("%s() {\n    local raw\n    raw=\"$(prst prompt %d)\"\n    printf '\\[%%s\\]' \"$raw\"\n}", name, n)
+		return fmt.Sprintf("%s() {\n    local raw\n    raw=\"$(prst prompt --color=always %d)\"\n    printf '\\001%%s\\002' \"$raw\"\n}", name, n)
 	case Zsh:
-		return fmt.Sprintf("%s() {\n    local raw\n    raw=\"$(prst prompt %d)\"\n    printf '%%{%%s%%}' \"$raw\"\n}", name, n)
+		return fmt.Sprintf("%s() {\n    local raw\n    raw=\"$(prst prompt --color=always %d)\"\n    printf '%%{%%s%%}' \"$raw\"\n}", name, n)
 	default:
 		return ""
 	}

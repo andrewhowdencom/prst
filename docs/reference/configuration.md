@@ -16,7 +16,7 @@ If `$XDG_CONFIG_HOME` is unset, it falls back to `~/.config/prst/config.yaml`.
 
 Configuration values are resolved in this order (first match wins):
 
-1. Command-line flags (`--log-level`, `--no-color`)
+1. Command-line flags (`--log-level`, `--color`)
 2. Environment variables (`PRST_LOG_LEVEL`, `PRST_COLOR_ENABLED`, …)
 3. Config file at `$XDG_CONFIG_HOME/prst/config.yaml`
 
@@ -86,7 +86,7 @@ Each segment in `ps1.segments` has the following fields:
 
 ### Detection order
 
-1. `--no-color` flag or `color.enabled: false` → no colors
+1. `--color=never` or `color.enabled: false` → no colors
 2. `$NO_COLOR` environment variable set → no colors
 3. `$TERM == dumb` → no colors
 4. Non-TTY and not explicitly enabled → no colors

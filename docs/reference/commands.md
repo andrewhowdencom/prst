@@ -80,7 +80,7 @@ These flags are available on every command.
 | Flag | Type | Default | Description |
 |---|---|---|---|
 | `--log-level` | `string` | `info` | Set the logging level (`debug`, `info`, `warn`, `error`). |
-| `--no-color` | `bool` | `false` | Disable colored output for this run. |
+| `--color` | `string` | `auto` | Color output mode: `auto`, `always`, or `never`. |
 
 ## Environment variables
 
@@ -89,8 +89,9 @@ All environment variables use the `PRST_` prefix.
 | Variable | Maps to | Description |
 |---|---|---|
 | `PRST_LOG_LEVEL` | `--log-level` | Override the log level. |
-| `PRST_NO_COLOR` | `--no-color` | Set to any value to disable colors (note: this is the env-var mapping of the flag; the standard `$NO_COLOR` convention is also honored independently). |
+| `PRST_COLOR` | `--color` | Override the color mode (`auto`, `always`, `never`). |
 | `PRST_COLOR_ENABLED` | `color.enabled` | Force colors on or off via config key mapping. |
+| `NO_COLOR` | — | Set to any value to disable colors (honored independently of `--color`). |
 
 Because Viper replaces `.` with `_` for nested keys, any config file value can be overridden by an environment variable. For example, a hypothetical `style.name` in the config file would map to `PRST_STYLE_NAME`.
 
