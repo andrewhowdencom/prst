@@ -1,6 +1,4 @@
 prst_ps1() {
-    local raw
-    raw="$(prst prompt --color=always 1)"
-    printf '\001%s\002' "$raw"
+    prst prompt --color=always --shell=bash 1
 }
 PS1='$(prst_ps1)'

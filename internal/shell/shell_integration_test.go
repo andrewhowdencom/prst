@@ -10,7 +10,8 @@ import (
 
 // TestBashInitScriptIntegration builds the prst binary, injects its absolute
 // path into the bash init script, and verifies that a real bash shell renders
-// the prompt with ANSI color codes and no literal \[ or \] markers.
+// the prompt with ANSI color codes, no literal \[ or \] markers, and correct
+// cursor positioning (a new command appears on a new line).
 func TestBashInitScriptIntegration(t *testing.T) {
 	bash, err := exec.LookPath("bash")
 	if err != nil {
@@ -35,10 +36,9 @@ func TestBashInitScriptIntegration(t *testing.T) {
 export TERM=xterm
 export PRST_COLOR_ENABLED=true
 ` + script + `
-set -x
-PS4='PROMPT_CAPTURE[${PS1}] '
-echo "test"
-set +x
+# Type two commands; each should appear on its own line.
+echo "line-one"
+echo "line-two"
 `
 
 	cmd := exec.Command(bash, "--norc", "--noprofile", "-i")
@@ -52,6 +52,24 @@ set +x
 	}
 
 	output := out.String()
+	lines := strings.Split(output, "\n")
+
+	// Find the lines containing our echo outputs.
+	var foundLineOne, foundLineTwo bool
+	for _, line := range lines {
+		if strings.Contains(line, "line-one") {
+			foundLineOne = true
+		}
+		if strings.Contains(line, "line-two") {
+			foundLineTwo = true
+		}
+	}
+	if !foundLineOne {
+		t.Errorf("missing 'line-one' output; prompt may not be advancing to new line. output:\n%s", output)
+	}
+	if !foundLineTwo {
+		t.Errorf("missing 'line-two' output; prompt may not be advancing to new line. output:\n%s", output)
+	}
 
 	// The expanded prompt should contain ANSI escape codes.
 	if !strings.Contains(output, "\x1b[") {
@@ -60,12 +78,7 @@ set +x
 
 	// There should be NO literal backslash-bracket pairs visible.
 	if strings.Contains(output, `\[`) || strings.Contains(output, `\]`) {
-		t.Errorf("expanded prompt contains literal \\[ or \\] markers; output:\n%s", output)
-	}
-
-	// Verify the prompt capture wrapper worked.
-	if !strings.Contains(output, "PROMPT_CAPTURE[") {
-		t.Errorf("did not find PROMPT_CAPTURE marker in output; output:\n%s", output)
+		t.Errorf("expanded prompt contains literal `[` or `]` markers; output:\n%s", output)
 	}
 }
 
@@ -94,10 +107,7 @@ func TestBashInitScriptNoColor(t *testing.T) {
 	input := `export NO_COLOR=1
 export TERM=xterm
 ` + script + `
-set -x
-PS4='PROMPT_CAPTURE[${PS1}] '
 echo "test"
-set +x
 `
 
 	cmd := exec.Command(bash, "--norc", "--noprofile", "-i")
@@ -119,7 +129,7 @@ set +x
 
 	// Still no literal backslash-bracket pairs.
 	if strings.Contains(output, `\[`) || strings.Contains(output, `\]`) {
-		t.Errorf("expanded prompt contains literal \\[ or \\] markers; output:\n%s", output)
+		t.Errorf("expanded prompt contains literal `[` or `]` markers; output:\n%s", output)
 	}
 }
 

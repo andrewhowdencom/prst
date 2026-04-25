@@ -117,17 +117,14 @@ func TestNewInitCommand(t *testing.T) {
 
 func TestInitScriptBash(t *testing.T) {
 	script := shell.Bash.InitScript([]int{1})
-	if !strings.Contains(script, "printf '\\001%s\\002' \"$raw\"") {
-		t.Errorf("bash init script missing bash non-printing wrapper (\\001...\\002), got:\n%s", script)
-	}
-	if strings.Contains(script, "printf '\\[%s\\]'") {
-		t.Errorf("bash init script incorrectly uses \\[ \\] instead of \\001 \\002, got:\n%s", script)
+	if !strings.Contains(script, "--shell=bash") {
+		t.Errorf("bash init script missing --shell=bash, got:\n%s", script)
 	}
 	if !strings.Contains(script, "PS1='$(prst_ps1)'") {
 		t.Errorf("bash init script missing PS1 assignment, got:\n%s", script)
 	}
-	if !strings.Contains(script, "prst prompt --color=always 1") {
-		t.Errorf("bash init script missing prst prompt --color=always call, got:\n%s", script)
+	if !strings.Contains(script, "prst prompt --color=always --shell=bash 1") {
+		t.Errorf("bash init script missing prst prompt call, got:\n%s", script)
 	}
 }
 
@@ -136,14 +133,14 @@ func TestInitScriptZsh(t *testing.T) {
 	if !strings.Contains(script, "setopt promptsubst") {
 		t.Errorf("zsh init script missing promptsubst, got:\n%s", script)
 	}
-	if !strings.Contains(script, "printf '%{%s%}' \"$raw\"") {
-		t.Errorf("zsh init script missing zsh non-printing wrapper, got:\n%s", script)
+	if !strings.Contains(script, "--shell=zsh") {
+		t.Errorf("zsh init script missing --shell=zsh, got:\n%s", script)
 	}
 	if !strings.Contains(script, "PS1='$(prst_ps1)'") {
 		t.Errorf("zsh init script missing PS1 assignment, got:\n%s", script)
 	}
-	if !strings.Contains(script, "prst prompt --color=always 1") {
-		t.Errorf("zsh init script missing prst prompt --color=always call, got:\n%s", script)
+	if !strings.Contains(script, "prst prompt --color=always --shell=zsh 1") {
+		t.Errorf("zsh init script missing prst prompt call, got:\n%s", script)
 	}
 }
 

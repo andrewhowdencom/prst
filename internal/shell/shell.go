@@ -88,15 +88,14 @@ func (s Shell) InitScript(numbers []int) string {
 	return b.String()
 }
 
-// initFunction generates the shell function that wraps prst N output with
-// the appropriate non-printing sequence markers for the target shell.
+// initFunction generates the shell function that invokes prst for the
+// given prompt number. The --shell flag tells prst to wrap ANSI escape
+// sequences in the appropriate non-printing markers for the target shell.
 func (s Shell) initFunction(n int) string {
 	name := "prst_ps" + strconv.Itoa(n)
 	switch s {
-	case Bash:
-		return fmt.Sprintf("%s() {\n    local raw\n    raw=\"$(prst prompt --color=always %d)\"\n    printf '\\001%%s\\002' \"$raw\"\n}", name, n)
-	case Zsh:
-		return fmt.Sprintf("%s() {\n    local raw\n    raw=\"$(prst prompt --color=always %d)\"\n    printf '%%{%%s%%}' \"$raw\"\n}", name, n)
+	case Bash, Zsh:
+		return fmt.Sprintf("%s() {\n    prst prompt --color=always --shell=%s %d\n}", name, s, n)
 	default:
 		return ""
 	}
