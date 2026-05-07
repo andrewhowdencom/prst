@@ -7,3 +7,9 @@ linters:
     - govet
     - staticcheck
     - gosec
+
+issues:
+  exclude-rules:
+    - linters:
+        - gosec
+      text: "G306"

@@ -3,6 +3,7 @@ package prompt
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -301,5 +302,97 @@ func TestPS1GeneratorSegments(t *testing.T) {
 				t.Errorf("Generate(%v) = %q, want %q", tt.cap, got, tt.wantFn())
 			}
 		})
+	}
+}
+
+func TestPS1GeneratorGitOutsideRepo(t *testing.T) {
+	dir := t.TempDir()
+	t.Chdir(dir)
+	g := NewPS1Generator(PS1Config{
+		Segments: []SegmentConfig{{Type: "git", GitTemplate: "{{.Git.Branch}}"}},
+	})
+	got := g.Generate(ColorNone)
+	if got != "" {
+		t.Errorf("Generate() = %q, want empty", got)
+	}
+}
+
+func TestPS1GeneratorGitWithColor(t *testing.T) {
+	skipIfNoGit(t)
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	if err := exec.Command("git", "init").Run(); err != nil {
+		t.Fatalf("git init: %v", err)
+	}
+	if err := exec.Command("git", "config", "user.email", "test@example.com").Run(); err != nil {
+		t.Fatalf("git config user.email: %v", err)
+	}
+	if err := exec.Command("git", "config", "user.name", "Test").Run(); err != nil {
+		t.Fatalf("git config user.name: %v", err)
+	}
+	if err := os.WriteFile("a.txt", []byte("a"), 0o644); err != nil {
+		t.Fatalf("write file: %v", err)
+	}
+	if err := exec.Command("git", "add", "a.txt").Run(); err != nil {
+		t.Fatalf("git add: %v", err)
+	}
+	if err := exec.Command("git", "commit", "-m", "first").Run(); err != nil {
+		t.Fatalf("git commit: %v", err)
+	}
+
+	out, err := exec.Command("git", "branch", "--show-current").Output()
+	if err != nil {
+		t.Fatalf("git branch: %v", err)
+	}
+	branch := strings.TrimSpace(string(out))
+
+	g := NewPS1Generator(PS1Config{
+		Segments: []SegmentConfig{{Type: "git", GitTemplate: "{{.Git.Branch}}", Color: "green"}},
+	})
+	got := g.Generate(ColorBasic16)
+	want := NewColor("green").toANSI(ColorBasic16) + branch + resetSequence
+	if got != want {
+		t.Errorf("Generate() = %q, want %q", got, want)
+	}
+}
+
+func TestPS1GeneratorGitNoColor(t *testing.T) {
+	skipIfNoGit(t)
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	if err := exec.Command("git", "init").Run(); err != nil {
+		t.Fatalf("git init: %v", err)
+	}
+	if err := exec.Command("git", "config", "user.email", "test@example.com").Run(); err != nil {
+		t.Fatalf("git config user.email: %v", err)
+	}
+	if err := exec.Command("git", "config", "user.name", "Test").Run(); err != nil {
+		t.Fatalf("git config user.name: %v", err)
+	}
+	if err := os.WriteFile("a.txt", []byte("a"), 0o644); err != nil {
+		t.Fatalf("write file: %v", err)
+	}
+	if err := exec.Command("git", "add", "a.txt").Run(); err != nil {
+		t.Fatalf("git add: %v", err)
+	}
+	if err := exec.Command("git", "commit", "-m", "first").Run(); err != nil {
+		t.Fatalf("git commit: %v", err)
+	}
+
+	out, err := exec.Command("git", "branch", "--show-current").Output()
+	if err != nil {
+		t.Fatalf("git branch: %v", err)
+	}
+	branch := strings.TrimSpace(string(out))
+
+	g := NewPS1Generator(PS1Config{
+		Segments: []SegmentConfig{{Type: "git", GitTemplate: "{{.Git.Branch}}", Color: "green"}},
+	})
+	got := g.Generate(ColorNone)
+	want := branch
+	if got != want {
+		t.Errorf("Generate() = %q, want %q", got, want)
 	}
 }

@@ -17,13 +17,15 @@ import (
 //   - "time":       Format ("short"|"full"|"date", default "short")
 //   - "newline":    no extra fields
 //   - "literal":    Text (free-form text)
+//   - "git":        GitTemplate (Go text/template string)
 type SegmentConfig struct {
-	Type   string `mapstructure:"type"`
-	Color  string `mapstructure:"color"`
-	Mode   string `mapstructure:"mode"`   // host, cwd
-	Format string `mapstructure:"format"` // time
-	Style  string `mapstructure:"style"`  // prompt
-	Text   string `mapstructure:"text"`   // literal
+	Type        string `mapstructure:"type"`
+	Color       string `mapstructure:"color"`
+	Mode        string `mapstructure:"mode"`        // host, cwd
+	Format      string `mapstructure:"format"`      // time
+	Style       string `mapstructure:"style"`       // prompt
+	Text        string `mapstructure:"text"`        // literal
+	GitTemplate string `mapstructure:"git_template"` // git
 }
 
 // Content returns the runtime-resolved string for this segment.
@@ -57,6 +59,8 @@ func (s SegmentConfig) Content() string {
 		return "\n"
 	case "literal":
 		return literalEscapes(s.Text)
+	case "git":
+		return resolveGit(s.GitTemplate)
 	default:
 		return ""
 	}

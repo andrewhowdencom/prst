@@ -141,6 +141,34 @@ Free-form text. Requires the `text` field. Backslashes are escaped automatically
   text: "❯ "
 ```
 
+### `git`
+
+Git repository state. Requires the `git_template` field, which is a [Go text/template](https://pkg.go.dev/text/template) string. The segment renders as empty when the current directory is not inside a git repository or when the `git` binary is unavailable.
+
+| Variable | Description |
+|---|---|
+| `{{.Git.Branch}}` | Current branch name. Falls back to the short commit SHA in detached HEAD state. |
+| `{{.Git.Dirty}}` | `true` when the working tree or index has uncommitted changes (staged, unstaged, or untracked). |
+| `{{.Git.Ahead}}` | Number of commits ahead of the upstream branch. Defaults to `0` when no upstream is configured. |
+| `{{.Git.Behind}}` | Number of commits behind the upstream branch. Defaults to `0` when no upstream is configured. |
+| `{{.Git.ShortSHA}}` | 7‑character abbreviated commit hash. |
+
+```yaml
+- type: git
+  git_template: "({{.Git.Branch}}{{if .Git.Dirty}}*{{end}})"
+  color: cyan
+```
+
+Use template conditionals to selectively render markers:
+
+```yaml
+- type: git
+  git_template: "[{{.Git.Branch}}{{if .Git.Dirty}}*{{end}}{{if gt .Git.Ahead 0}}↑{{.Git.Ahead}}{{end}}{{if gt .Git.Behind 0}}↓{{.Git.Behind}}{{end}}]"
+  color: magenta
+```
+
+Standard Go `text/template` functions such as `if`, `gt`, `lt`, and `eq` are available for conditionals and comparisons.
+
 ## Color formats
 
 `prst` auto-detects your terminal's color capability and emits the richest format it can safely use.

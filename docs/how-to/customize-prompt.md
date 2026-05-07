@@ -116,6 +116,60 @@ ps1:
     - type: prompt
 ```
 
+## How do I show git repository information?
+
+**Prerequisite:** `git` must be installed and you must be inside a Git repository. The segment renders as empty when you are not in a repository or when `git` is unavailable.
+
+Use the `git` segment with a `git_template` field. The template is a [Go text/template](https://pkg.go.dev/text/template) string that can access `.Git.Branch`, `.Git.Dirty`, `.Git.Ahead`, `.Git.Behind`, and `.Git.ShortSHA`.
+
+### Branch name only
+
+```yaml
+ps1:
+  segments:
+    - type: user         color: green
+    - type: literal       text: "@"
+    - type: host          color: cyan
+    - type: literal       text: ":"
+    - type: cwd           color: blue
+    - type: literal       text: " "
+    - type: git
+      git_template: "({{.Git.Branch}})"
+      color: magenta
+    - type: literal       text: " "
+    - type: prompt
+```
+
+### Branch with dirty marker
+
+Show an asterisk when there are uncommitted changes:
+
+```yaml
+ps1:
+  segments:
+    - type: git
+      git_template: "({{.Git.Branch}}{{if .Git.Dirty}}*{{end}})"
+      color: cyan
+    - type: literal       text: " "
+    - type: prompt
+```
+
+### Full git status
+
+Show branch, dirty marker, ahead/behind arrows, and short SHA:
+
+```yaml
+ps1:
+  segments:
+    - type: git
+      git_template: "[{{.Git.Branch}}{{if .Git.Dirty}}*{{end}}{{if gt .Git.Ahead 0}}↑{{.Git.Ahead}}{{end}}{{if gt .Git.Behind 0}}↓{{.Git.Behind}}{{end}}|{{.Git.ShortSHA}}]"
+      color: yellow
+    - type: literal       text: " "
+    - type: prompt
+```
+
+The segment renders as empty when you are not inside a git repository, so it gracefully disappears outside of projects.
+
 ## How do I debug my configuration?
 
 Run `prst` with debug logging to see which segments are resolved and what color capability is detected:
